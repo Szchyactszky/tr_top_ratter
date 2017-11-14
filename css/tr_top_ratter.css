@@ -1,0 +1,207 @@
+
+.fancy_notice_admins{
+	padding:5px;
+	margin: 15px 0px;
+	border-radius: 5px;
+	background-color: yellow;
+	border: 1px solid orange;
+	font-weight: bolder;
+	font-size: 15px;
+	line-height: 18px;
+}
+.long_multi_select_chars{
+	height: 300px;
+}
+.assigned_chars{
+	float: left;
+	margin-right: 20px;
+/* 	min-width: 200px; */
+}
+.free_chars{
+	float: left;
+/* 	min-width: 200px; */
+}
+
+pre {
+	line-height: 14px;
+}
+body{
+    background-color: white!important;
+}
+.spai_better_no_data{
+	width: 100%;
+	text-align: center;
+	font-weight: bold;
+}
+p {
+	margin-bottom: 0px !important;
+}
+
+.clearfix {
+	clear: both;
+}
+
+.tr_selection {
+	font-family: monospace;
+	margin: 0px auto;
+}
+
+.top_border {
+	border-top: 2px;
+	border-top-width: 2px;
+	border-top-style: solid;
+}
+
+.tr_selection td {
+	padding: 0px 5px 0px 5px !important;
+	margin: 0px !important;
+	line-height: 22px;
+}
+
+.charname {
+	text-align: left;
+}
+
+.tax_right {
+	text-align: right;
+	padding-right: 0px !important;
+}
+
+.align_right {
+	text-align: right;
+}
+
+.users_corps {
+	margin: 30px 0px;
+}
+
+.users_corps p {
+	margin: 0px;
+	padding: 0px;
+}
+
+#isk_day_per_char {
+/* 	height: 300px; */
+/* 	width: 100%; */
+/* 	width: 106.5%!important; */
+/* 	margin-left:-6.5%!important; */
+/* 	width: 800px; */
+}
+
+#isk_day_per_char_acumulate {
+/* 	height: 500px; */
+	width: 100%;
+}
+
+.entry-content {
+	margin: 0px !important;
+}
+
+.site-content {
+	padding: 0px !important;
+}
+
+.Selection_boxes {
+	font-family: monospace;
+	margin: 0px auto;
+}
+
+.datafromto {
+	font-family: monospace;
+	margin: 0px auto;
+	display: table;
+}
+
+.vague_line {
+	border-top: 1px solid #ff9b9b;
+}
+
+.bottom_border_2{
+/* 	border-bottom: 1px solid #ff9b9b; */
+	background-color: #a5ff9b;
+}
+/* .clearfix{ */
+/* 	  overflow: auto; */
+/*   zoom: 1; */
+/* } */
+.dankbuttons{
+/* 	display: none; */
+	
+}
+.grid-col-14 {
+    width: 97%!important;
+    
+}
+.primarymenu-section{
+	width: 800px!important;
+	
+}
+
+/*---- Admin styles ----*/
+
+.format_isk_btn{
+	background-color: red;
+
+}
+.format_isk_div{
+	width:100px;
+		margin: 0px auto;
+}
+
+@media only screen and (max-width: 2000px) {
+	.isk_day_per_char {
+		height: 550px!important;
+		width: 111.5%!important;
+		margin-left:-10.5%!important;
+/* 		padding-top: -9.5%!important; */
+		
+	}
+}
+@media only screen and (max-width: 1400px) {
+	.isk_day_per_char {
+		height: 450px!important;
+	/* 	width: 100%; */
+		width: 110.5%!important;
+		margin-left:-10.5%!important;
+	/* 	width: 800px; */
+	}
+}
+@media only screen and (max-width: 1000px) {
+	.isk_day_per_char {
+		height: 400px!important;
+	/* 	width: 100%; */
+		width: 110.5%!important;
+		margin-left:-10.5%!important;
+	/* 	width: 800px; */
+	}
+}
+@media only screen and (max-width: 850px) {
+	.isk_day_per_char {
+		height: 350px!important;
+	/* 	width: 100%; */
+		width: 110.5%!important;
+		margin-left:-10.5%!important;
+	/* 	width: 800px; */
+	}
+}
+@media only screen and (max-width: 550px) {
+	.isk_day_per_char {
+		height: 300px!important;
+	/* 	width: 100%; */
+		width: 110.5%!important;
+		margin-left:-10.5%!important;
+	/* 	width: 800px; */
+	}
+}
+@media only screen and (max-width: 350px) {
+	.isk_day_per_char {
+		height: 250px!important;
+	/* 	width: 100%; */
+		width: 107.5%!important;
+		margin-left:-7.5%!important;
+	/* 	width: 800px; */
+	}
+}
+
+
+
