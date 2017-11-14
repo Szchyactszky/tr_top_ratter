@@ -1,7 +1,7 @@
 <?php
 /**
  * @package tr_top_ratter
- * @version 0.6.21
+ * @version 0.6.4
  */
 /*
  * Plugin Name: tr_top_ratter
