@@ -1,0 +1,10 @@
+# Make it so Admins can define their own number of top pvp characters, right now it is hard coded to 5 in get_top5_pvp_kills_by_main_characters
+
+# Create interface where admins can choose their own refTypeID for incomes to tax, right now it is hardcoded to certain preset in filter_ratting_data
+
+# RAtting data for specific system by specific character in specific time period by number off npc kills NOT isk.
+
+#Structure incomes by structures from drop down menu one can select structure and see total for structure in time period, or total incomes from all structures in time period.
+
+# Make SSO login possible for ESI api and use new api.
+# Login to the wordpress using SSO api and use the SSO api credentials. how? login - create user- use char name as login., only login using SSO

@@ -6,6 +6,8 @@
  * https://api.eveonline.com//corp/WalletJournal.xml.aspx?
  * Returns acquired data to caller function.
  * 
+ * It is rumored that the XML API support will end on may 8 2018
+ * 
  *
  *
  * @since 1.0.0
@@ -33,13 +35,9 @@ class Top_Ratter_Xml_Api {
 		if ($response === false) {
 			echo 'Curl error: ' . curl_error ( $ch );
 			echo ' Refresh page.';
-// 			die ();
 			return false;
 		} else {
-			
-// 						echo 'ze fukin problem<pre>';
-// 						echo var_dump($response);
-// 						echo '</pre>';
+
 			
 			$xml = new SimpleXMLElement ( $response );
 			
@@ -68,6 +66,7 @@ class Top_Ratter_Xml_Api {
 		global $wpdb;
 	
 		$time_now = date ( "Y-m-d H:i:s" );
+		//debuging purpouses
 // 		echo 'cached time';
 // 		echo $corp_data_array['cached_until'];
 		
@@ -79,11 +78,12 @@ class Top_Ratter_Xml_Api {
 			$xml_array [] = null;
 			
 			// loop trough the relevant data
-// 			echo var_dump($ticks);
+
 			if ($ticks != null) {
 				//add new cache timer to the corporations db
 				$cache_timer = date("Y-m-d H:i:s",strtotime(date("Y-m-d H:i:s")." +10 minutes"));
 // 				$cache_timer = date("Y-m-d H:i:s",strtotime(date("Y-m-d H:i:s")." 0 minutes"));
+
 				//set data to update
 				$data2 = array (
 						'cached_until' => $cache_timer
@@ -113,10 +113,6 @@ class Top_Ratter_Xml_Api {
 				return false;
 			}
 		}
-// 		echo"<br>------xml------<br><pre>";
-// 		echo var_dump($ticks);
-// 		echo"</pre><br>----------<br>";
-		
 		return $xml_array;
 	}
 	/**
@@ -132,27 +128,19 @@ class Top_Ratter_Xml_Api {
 		 * honor the cache, but try to use it every time somone enters the page
 		 * insert records from api to wp_tr_characters if not already
 		 * 
+		 * This is changed and only runs when the cron job is trigered whitch is 30 min interval
+		 * 
 		 * 
 		 */
 		date_default_timezone_set('UTC');
 		global $wpdb;
 		
 		$time_now = date ( "Y-m-d H:i:s" );
-// 				echo 'cached time';
-// 				echo $corp_data_array['cached_until'];
-// 					echo'corp data array<pre>';
-// 					echo var_dump($corp_data_array);
-// 					echo'</pre>';
+
 		//if the cahce timer is bigger than now.
 		$xml_array=null;
 // 		if($corp_data_array['cached_until']<$time_now||$corp_data_array['cached_until']==null){
 			$members = $this->apicall ( 'https://api.eveonline.com/corp/MemberTracking.xml.aspx?keyID=' . $corp_data_array ['key_id'] . '&vCode=' . $corp_data_array ['vCode']  );
-			
-// 								echo'members<pre>';
-// 								echo var_dump($members);
-// 								echo'</pre>';
-								
-// 								return;
 			
 			foreach ( $members->result->rowset->row as $row ) {
 				if($switch==null){
@@ -162,10 +150,8 @@ class Top_Ratter_Xml_Api {
 					);
 				}
 			}
-			
-			
+
 // 		}
-		
 		
 		return $xml_array;
 		

@@ -75,22 +75,13 @@ class Top_Ratter_Render {
 				'render_jdoe_page_druglords'
 		) );
 		
-		// SSO login for eve online
-		add_shortcode ( 'sc_tr_sso_login_image', array (
-				$this,
-				'render_sso_login_stuff'
-		) );
-		// SSO callback
-		add_shortcode ( 'sc_sso_callback', array (
-				$this,
-				'render_sso_callback'
-		) );
+
 		
 		// sc_stealthy_ninja_table_fix
-		add_shortcode ( 'sc_stealthy_ninja_table_fix', array (
-				$this,
-				'stealthy_ninja_table_fix'
-		) );
+// 		add_shortcode ( 'sc_stealthy_ninja_table_fix', array (
+// 				$this,
+// 				'stealthy_ninja_table_fix'
+// 		) );
 	}
 	/**
 	 * This function creates Menu items TOP RATTER in the admin menu and ties content function to it.
@@ -311,7 +302,11 @@ class Top_Ratter_Render {
 			echo'</table>';
 		}
 	}
-	
+	/**
+	 * Function to make changes in database without cpanel access
+	 *
+	 * @return void
+	 */
 	public function stealthy_ninja_table_fix(){
 		
 // 		global $wpdb;
@@ -333,6 +328,7 @@ class Top_Ratter_Render {
 	 * Renders the top ratter nonadmin user interface shortcode
 	 *
 	 * This function renders its contents in the page where the shortcode is placed.
+	 * renders table and graphs 
 	 *
 	 * @return void
 	 */
@@ -358,26 +354,14 @@ class Top_Ratter_Render {
 				echo '<p class="datafromto">Spai period: '.$get_values_array ['T1'] . ' -> ' . $get_values_array ['T2'].'</p>';
 				//find out what corp user belongs to
 				
-			
-// 				$sql = "SELECT * FROM " . $wpdb->prefix . "tr_corporations WHERE id=$user_corp";
-				// go trough array and find unique
-				
-// 				$corp_data_array = $wpdb->get_row ( "$sql", ARRAY_A );
-				
-// 				echo'corp data array<pre>';
-// 				echo var_dump($corp_data_array);
-// 				echo'</pre>';
 
 				
 				//render the table of each char total isk
 				$this->display_in_time_period ( $get_values_array ['T1'], $get_values_array ['T2'] );
 				
-				// render some kind of visual thing.
+				
 				$this->render_graph( $get_values_array ['T1'], $get_values_array ['T2'] );
-			
-// 				echo'*Data is refreshed every 30 min.<br>';
-// 				echo'**More functionality coming soon&trade;<br>';
-// 				echo'*** Thanks to <b>Judge07</b>, <b>Jonathan Doe</b>, <b>biggus dickus Aurilen</b> and <b>Hhatia</b>';
+
 			}else{
 				echo'You are totally a spai, PM an officer ingame to confirm your spainess before you can proceed.';
 			}
@@ -467,12 +451,7 @@ class Top_Ratter_Render {
 					$kek=0;
 				}
 				
-				//show payable amount without spaces for admin. for copy paste.
-// 				if($current_user->user_login=='admin'){
-// 					echo number_format ( $kek, 2, ',', '' );
-// 				}else{
-					
-// 				}
+
 				echo number_format ( $kek, 2, ',', ' ' );
 				
 				
@@ -534,12 +513,7 @@ class Top_Ratter_Render {
 		/*
 		 * do table here for nice looking fields.
 		 */
-// 		echo '<form method="get">';
-// 		echo '<p> from <input type="text"  id="T1" name="T1" /></p>';
-// 		echo '<p> to <input type="text"  id="T2" name="T2" /></p>';
-// 		echo '<p><input type="submit" value="show" /></p>';
-// 		echo '</form>';
-// 		echo '<div class="clearfix"></div>';
+
 		
 		
 		
@@ -636,7 +610,6 @@ class Top_Ratter_Render {
 			$sql = "SELECT ID,user_nicename FROM `" . $wpdb->prefix . "users` ";
 			$all_users = $wpdb->get_results ( "$sql", ARRAY_A );
 			
-// 			echo '<form method="POST">';
 			echo '<form action="' . get_admin_url () . 'admin-post.php" method="post">';
 			echo '<input type="hidden" name="action" value="tr_action" />';
 			echo '<div class="users_corps">';
@@ -655,7 +628,7 @@ class Top_Ratter_Render {
 	 * renders the admin page for editing/updaring corp api.
 	 * and assigning users to corps.
 	 *
-	 * @return null
+	 * @return html string of data to render
 	 */
 	public function render_user_assignment($user_id) {
 		global $wpdb;
@@ -680,7 +653,7 @@ class Top_Ratter_Render {
 		return $return_string;
 	}
 	/**
-	 * Render Graph for data selection
+	 * Triger the DAta graphs rendering using google charts api
 	 *
 	 * renders the the graph for data selection
 	 * 
@@ -712,25 +685,7 @@ class Top_Ratter_Render {
 		
 
 	}
-	/**
-	 * testing click on  series to hide it.
-	 * https://codepen.io/anon/pen/jVaEqW
-	 * 
-	 * make it in to seperate file 
-	 * http://stackoverflow.com/questions/13219015/google-charts-external-javascript-issue
-	 * another way to load with extrenal file
-	 * https://groups.google.com/forum/#!topic/google-visualization-api/F0NcpEgt2TA
-	 * //how to do it win wordpress
-	 * https://www.worldoweb.co.uk/2014/adding-google-charts-wordpress-blog-part-1
-	 * 
-	 * 
-	 */
-	public function testing_random_javascript(){
-		
-		
-		
-		
-	}
+
 	/**
 	 * Render the first chart day/isk/char
 	 *
@@ -745,14 +700,7 @@ class Top_Ratter_Render {
 	
 EOD;
 		
-/*
- * 1354
- * 103 = names
- * 1152 = chart +title - names
- * 1255
- *  difference = 99 px 
- *  
- */
+
 
 		
 		
@@ -1131,6 +1079,13 @@ EOD;
 	 *http://eveonline-third-party-documentation.readthedocs.io/en/latest/xmlapi/eve/eve_reftypes.html
 	 *https://api.eveonline.com//eve/RefTypes.xml.aspx
 	 *
+	 * @TODO Give possibility to choose from all the Structures owned by corporation and choose them from drop down menu
+	 * 
+	 * ## This function needs a revision and updating to keep up with new changes in eve online.
+	 * 
+	 * @return void
+	 * 
+	 *
 	 */
 	public function structures_incomes(){
 		
@@ -1165,7 +1120,6 @@ EOD;
 						  WHERE `date_acquired` BETWEEN '".$get_values_array['T1']."' AND '".$get_values_array['T2']."'
 						  ORDER BY `date_acquired` DESC";
 					$structures_data = $wpdb->get_results ( "$sql", ARRAY_A );
-// 					echo $sql;
 					
 					
 					if ($structures_data != null) {
@@ -1208,7 +1162,7 @@ EOD;
 							}else{
 								echo'Jump Clone Installation Fee';
 							}
-// 							echo $record ['refTypeID'];
+
 							echo '</td>
 								<td  class="align_right">';
 							echo number_format ( $record['amount'], 2, ',', ' ' );
@@ -1222,9 +1176,6 @@ EOD;
 						Echo'<p class="datafromto">Nothing To Display You Greedy Baastard!</p>';
 					}
 		
-// 					echo"<br>------vardump------<br><pre>";
-// 					echo var_dump($structures_data);
-// 					echo"</pre><br>----------<br>";
 
 				}else{
 					echo'R.I.P. No Access for you...';
@@ -1249,14 +1200,16 @@ EOD;
 	 * 
 	 * https://zkillboard.com/corporation/98342863/top/
 	 * 
-	 * @ return void
+	 * @todo Fix the multiple corporation gathering mechanism so that more than one can be added to the plugin.
+	 * 
+	 * @return void
 	 */
 	public function cronjob_triger_shortcode_function(){
 		
-// 		ini_set('memory_limit','250M');
+
 		Global $wpdb;
 		
-// 		echo'<pre>shortcode triger function</pre>';
+
 		
 		//get all corps
 		$sql="SELECT * FROM `" . $wpdb->prefix . "tr_corporations`";
@@ -1267,12 +1220,6 @@ EOD;
 			//run for each corp
 			foreach($corp_table as $corporation){
 				
-				
-// 				echo'corporation var<pre>';
-// 				echo var_dump($corporation);
-// 				echo'</pre>';
-				
-// 				echo'<pre>shortcode triger function</pre>';
 
 				/*
 				 * Redo the gather mechanism because this will run the xml call again
@@ -1291,69 +1238,24 @@ EOD;
 				
 				//update user list.
 				$top_rat->update_corp_member_list_in_db ( $corporation );
-// 						echo"<pre>";
-// 						echo var_dump($corporation);
-// 						echo"</pre>";
-				
+	
 			}
-			
-			
-			
 		}
-		
-		
-		
-		
-
-
-		
-		
-		
-// 		echo"<pre>";
-// 		echo var_dump($data);
-// 		echo"</pre>";
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 	}
 	
 	/**
 	 * Renders Top 5 pvp killers
 	 * 
-	 * @param $start
-	 * @param $end
+	 * @param $start date
+	 * @param $end date 
+	 * @param $remaining int ISK remaining for pvp prizes
 	 * 
-	 * @ return void
+	 * @return void
 	 */
 	public function show_top_five_pvp_killers($start, $end,$remaining){
 		Global $wpdb;
 		
 
-// 		echo'<p class="spai_better_no_data">Thanks to Zkillboard team changing their API from black to white with orange spots
-// 					that sometimes are inside squares but sometimes are pink there is no kills on this page. You
-// 					are welcome to check the Zkill on your own. Sorry folks for the PVP reward fuck up, blame Zkill :D<br> P.S. Our IT team is working vigorously to fight this nonsence and deliver you the most l33t pvpers!<p><br>';
-// 		return;
-		
 		/*
 		 * ZKILL API
 		 * https://github.com/zKillboard/zKillboard/wiki/API-(Killmails)
@@ -1367,12 +1269,7 @@ EOD;
 		
 		$data = new Top_Ratter ();
 		$top_pvpers=$data->get_top5_pvp_kills_by_main_characters($start, $end);
-// 		echo'<pre>';
-// 		echo var_dump($top_pvpers);
-// 		echo'</pre>';
-		
-		
-		
+
 		if($top_pvpers!=false){
 
 			echo '<table class="tr_selection">
@@ -1388,8 +1285,7 @@ EOD;
 			
 			$perc=5;
 			$i=1;
-// 			for($i=1;$i<=5;$i++){
-				foreach($top_pvpers as $pvp_guy){
+			foreach($top_pvpers as $pvp_guy){
 					
 				$prize=$remaining*$perc/100;
 					
@@ -1413,20 +1309,13 @@ EOD;
 		
 		}else{
 			echo'<p class="spai_better_no_data">No Kills for this period... GO KEEL SOME !<p><br>';
-// 			echo'<p class="spai_better_no_data">Thanks to Zkillboard team chaning their API from black to white with black spots 
-// 					that sometimes are inside squares but sometimes are pink there is no temporary kills on this page. You 
-// 					are welcome to check the Zkill on your own. Sorry folks for the PVP reward fuck up, blame Zkill :D<p><br>';
-		}
-		
-// 		$corp_gets=$remaining-$total_pvp_prizes;
-// 		echo 'Remaining:'. number_format ( $corp_gets, 2, ',', ' ' );
-		
+		}	
 	}
 	
 	/**
-	 * Renders Main Char selection drob box in 'myAccount'
+	 * Renders Main Char selection drop box in 'myAccount'
 	 *
-	 * Allows loged in user to select his main char from his assigned chars.
+	 * Allows loged in user to select its main char from its assigned chars.
 	 *
 	 * @return void
 	 */
@@ -1476,22 +1365,7 @@ EOD;
 	 */
 	public function render_admin_assign_related_characters(){
 		global $wpdb;
-		/*
-		 * select all chars from wp_tr_characters
-		 * 
-		 * select all chars from relation table 
-		 * 
-		 * remove chars that is in the relation table from all the chars 
-		 * 
-		 * show a number of assigned chars to the username [3] including main.
-		 * 
-		 * show all chars that is not refferenced in the  wp_tr_characters_relations on the RIGH
-		 *  
-		 * show all the referenced characters on the LEFT
-		 */
-		
-		
-		
+
 		if ( current_user_can( 'manage_options' ) ) {
 			/* A user with admin privileges */
 			
@@ -1504,17 +1378,6 @@ EOD;
 			$corp_data_array = $wpdb->get_row ( "$sql", ARRAY_A );
 			$xml = new Top_Ratter ();
 			
-			//run the updater
-// 			echo'update chars for corp [uncoment]';
-// 			$xml->update_corp_member_list_in_db ( $corp_data_array );
-			
-			
-			
-// 			$sql="SELECT * FROM `" . $wpdb->prefix . "tr_characters`";
-// 			$all_chars=get_results($sql,ARRAY_A);
-		
-// 			$sql="SELECT * FROM `" . $wpdb->prefix . "tr_characters_relations`";
-// 			$related_chars=get_results($sql,ARRAY_A);
 			
 			$sql="SELECT * FROM `" . $wpdb->prefix . "users`";
 			$all_users=$wpdb->get_results($sql,ARRAY_A);
@@ -1563,10 +1426,7 @@ EOD;
 			
 			
 			if ($user_id) {
-				
-// 				$user_id=$_GET ['aacfu'];
-				
-// 				echo'show stuff for user';
+
 				
 				$tr=new Top_Ratter();
 				
@@ -1613,21 +1473,12 @@ EOD;
 					echo'<div class="clearfix">';
 				}	
 			}
-
-// 			echo'related chars <pre>';
-// 			echo var_dump($related_chars);
-// 			echo'</pre>';
-			
-// 			echo' NOT related chars <pre>';
-// 			echo var_dump($not_related_chars);
-// 			echo'</pre>';
-
 		}	
 	}
 	
 	/**
 	 * Renders page where user can manage isk for druglords reactions pos.
-	 *
+	 * @TODO create the functionaly and database required for this .
 	 * @return void
 	 */
 	public function render_jdoe_page_druglords(){
@@ -1640,111 +1491,8 @@ EOD;
 		 * 
 		 */
 		
-		Echo'Here be Jdoe druglords stuff';
+		Echo'Here be coming Jdoe druglords stuff soon™';
 	}
-	
-	
-	/**
-	 * Renders page where user can login to eve with sso
-	 * http://eveonline-third-party-documentation.readthedocs.io/en/latest/crest/authentication.html
-	 *
-	 * @return void
-	 */
-	public function render_sso_login_stuff(){
-		
-		/*
-		 * Render the image that is a button 
-		 * that once clicked the post is processed and redirected to eve login
-		 */
-		
-		//echo <img src=" echo plugin_dir_url( dirname( __FILE__ ) ) . 'images/facebook.png'; ">
-		
-		//echo '<img src="'.plugin_dir_url( dirname( __FILE__ ) ) . 'img/EVE_SSO_Login_Buttons_Large_Black.png">';
-		
-		$r='<p class="">SSO token login:</p>';
-		//$r.= '<form method="post">';
-		$r.= '<form action="' . get_admin_url () . 'admin-post.php" method="post">';
-		$r.= '<input type="hidden" name="action" value="tr_action" />';
-		$r.= '<input type="hidden" name="SSO_LOGIN_REDIRECT_1" value="true" />';
-		$r.= '<input type="image" src="'.plugin_dir_url( dirname( __FILE__ ) ) . 'img/EVE_SSO_Login_Buttons_Large_Black.png" border="0" alt="Submit" />';
-		$r.= '</form>';
-		return $r;
-		
-		
-		
-	}
-	/**
-	 * Renders page where sso callback is recieved and processed.
-	 *
-	 * @return void
-	 */
-	public function render_sso_callback(){
-		
-		/*
-		 * https://3rdpartysite.com/callback?code=gEyuYF_rf...ofM0&state=uniquestate123
-		 * 
-		 * Check if these are the values that was requested aka STATE ( it must be saved in the db or smth before theredirect)
-		 * 
-		 */
-		
-		global $wpdb;
-		
-		if (isset ( $_GET ['code'] )) {
-			
-			
-			$code=$_GET ['code'];
-			$state=$_GET ['state'];
-			
-			$data=array(
-					'code'=>$code,
-					'state'=>$state
-			);
-			
-			//insert for testing
-			$wpdb->insert( $wpdb->prefix.'tr_sso_auth_code', $data);
-			
-			
-			
-			/*
-			 * make POST request
-			 * http://eveonline-third-party-documentation.readthedocs.io/en/latest/sso/authentication.html
-			 */
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-		}
-		
-		/*
-		 * ake CURL POST a base64 string to get token and save it in the  database
-		 * https://www.tools4noobs.com/online_php_functions/base64_encode/
-		 * 
-		 * https://stackoverflow.com/questions/2138527/php-curl-http-post-sample-code
-		 * 
-		 */
-		if (isset ( $_POST['code'] )) {
-			
-		}
-		
-		
-		
-		
-		
-		
-		
-		
-	}
-	
-	
-	
 	
 }
 

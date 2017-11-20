@@ -6,7 +6,6 @@
  * all calculations table cheks and any other kind of processing is done in this class file.
  *
  *
- * @since 1.0.0
  */
 class Top_Ratter {
 	/**
@@ -106,7 +105,7 @@ class Top_Ratter {
 				// "$wpdb->prefix" . "tr_sso_app_data",
 				"$wpdb->prefix" . "tr_sso_tokens",
 				"$wpdb->prefix" . "tr_sso_auth_code" 
-		) // for testing only
+		) 
 
 		;
 		foreach ( $required_tables as $table ) {
@@ -257,20 +256,15 @@ class Top_Ratter {
 	 * @return void
 	 */
 	public function update_ratting_data($corp_data_array) {
-		// echo'updating data';
 		global $wpdb;
 		$xml = new Top_Ratter_Xml_Api ();
 		// get the ratting data from xml class
 		$xml_array = $xml->get_ratting_data ( $corp_data_array );
 		
-// 		echo'CORP DATA XML FETCH <pre>';
-// 		echo var_dump($corp_data_array);
-// 		echo'</pre> ';
-		
-		
 		if ($xml_array == false) {
 			return;
 		}
+		
 		// filter the results for specific typeIDs
 		$data_array = $this->filter_ratting_data ( $xml_array );
 		$data_array_structures = $this->filter_ratting_data ( $xml_array, 'structures' );
@@ -317,12 +311,6 @@ class Top_Ratter {
 		// pprocess the structure incomes.
 		if ($data_array_structures != null) {
 			
-			/*
-			 * select the last data acquried time stamp
-			 * if there is none then insert
-			 * if there is check if the last entry is before the new entry
-			 *
-			 */
 			// get last record
 			$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_structures_income` ORDER BY `date_acquired` DESC LIMIT 5";
 			$last_record = $wpdb->get_row ( "$sql", ARRAY_A );
@@ -344,7 +332,6 @@ class Top_Ratter {
 						}
 					}
 				} else {
-					// just insert all
 					// prepare the data for insertion only if positive(master wallet)
 					if ($transaction ['amount'] > 0) {
 						$data2 = array (
@@ -363,6 +350,8 @@ class Top_Ratter {
 	 * Filters the data with valid refTypeID
 	 *
 	 * This function filters out the unnecessary refTypeID entries and return filtered array
+	 * 
+	 * @todo Give possibility for admins to choose what refTypeID they want to scan for.
 	 *
 	 * @param string $xml_array
 	 *        	raw xml associative array with latest 2650 entries
@@ -396,12 +385,6 @@ class Top_Ratter {
 			
 			return $filtered_data;
 		} elseif ($switch == 'structures') {
-			// define only valid refTypeID in the STRUCture income
-			// refTypeID="120" for indy tax
-			// [17:27]
-			// refTypeID="128" for JC installment
-			// [17:31]
-			// refTypeID="55" is JC activaction i think
 			// http://eveonline-third-party-documentation.readthedocs.io/en/latest/xmlapi/corporation/corp_walletjournal.html
 			if ($xml_array != null) {
 				$valid_refTypeID = array (
@@ -516,9 +499,6 @@ class Top_Ratter {
 		 * cast to int since it might be misbehaving with float
 		 *
 		 */
-		
-		// $t1 = round($a ['total'],0);
-		// $t2 = round($b ['total'],0);
 		$t1 = $a ['total'];
 		$t2 = $b ['total'];
 		
@@ -534,6 +514,7 @@ class Top_Ratter {
 	 *        	date to display from
 	 * @param date $end
 	 *        	date to display until
+	 * @param int $owner_id 
 	 *        	
 	 * @return $summ summ of isk
 	 */
@@ -560,6 +541,7 @@ class Top_Ratter {
 	 * HAndles Admin.php submit values
 	 *
 	 * This function catch all the values that is submited to admin.php
+	 * Its a wordpress way of submiting values
 	 *
 	 *
 	 * @return null
@@ -567,42 +549,12 @@ class Top_Ratter {
 	public function prefix_admin_tr_action() {
 		global $wpdb;
 		
-		// SSO login redirect 1
-		
-		if (isset ( $_POST ['SSO_LOGIN_REDIRECT_1'] )) {
-			
-			$eve_sso_login_url = "https://login.eveonline.com/oauth/authorize/";
-			$finished_url_with_params;
-			
-			// ?response_type=code
-			// &redirect_uri=https%3A%2F%2F3rdpartysite.com%2Fcallback
-			// &client_id=3rdpartyClientId
-			// &scope=characterContactsRead%20characterContactsWrite
-			// &state=uniquestate123
-			
-			$response_type = "code";
-			$redirect_uri = "http://rlop.gargite.com/sso_callback/";
-			$client_id = "66b1f7f883ea4558b4c646461fcbfade";
-			// $scope="characterContactsRead characterAssetsRead characterCalendarRead characterMailRead characterAccountRead characterContractsRead characterBookmarksRead characterChatChannelsRead characterClonesRead";
-			$scope = "characterMailRead";
-			
-			$state = "Ko_lai_te_raksta";
-			
-			$finished_url_with_params .= $eve_sso_login_url . '?response_type=' . $response_type . '&redirect_uri=' . $redirect_uri . '&client_id=' . $client_id . '&scope=' . $scope . '&state=' . $state;
-			
-			// echo $finished_url_with_params;
-			// $finished_url_with_params='http://rlop.gargite.com/';
-			wp_redirect ( $finished_url_with_params );
-			exit ();
-		}
-		
+
 		// check for post values as array
 		if (isset ( $_POST ['assign_user_to_corp'] )) {
 			$arr = $_POST ['assign_user_to_corp'];
 			foreach ( $arr as $k ) {
-				// string combination user_id - corp_id
-				// string(3) "1_2"
-				// echo $k;
+
 				$vars = explode ( "_", $k );
 				$user_meta = get_user_meta ( $vars [0], 'Char_corp_asign', true );
 				// update array.
@@ -618,7 +570,7 @@ class Top_Ratter {
 			}
 		}
 		
-		// This is user sets main char submit handle
+		// This is when user sets main char submit handle
 		if (isset ( $_POST ['user_select_main_char'] )) {
 			// update all chars as main char=0
 			$data = array (
@@ -747,7 +699,6 @@ class Top_Ratter {
 			}
 		}
 		
-		// echo'<br>Redirect commented [uncomment]<br>';
 		wp_redirect ( $_SERVER ['HTTP_REFERER'] );
 		exit ();
 	}
@@ -763,7 +714,6 @@ class Top_Ratter {
 	 * @return $prepared_array
 	 */
 	public function prepare_data_for_chart_by_days($start, $end) {
-		// sort and order the array here.
 		global $wpdb;
 		
 		// get the user id
@@ -807,7 +757,7 @@ class Top_Ratter {
 				$prepared_array [0] [] = $key;
 			}
 			
-			// -------------
+			
 			$start2 = new DateTime ( $start );
 			$end2 = date ( "Y-m-d H:i:s", strtotime ( $end . " +1 day" ) );
 			$end3 = new DateTime ( $end2 );
@@ -832,7 +782,7 @@ class Top_Ratter {
 		}
 		
 		return $prepared_array;
-		// return $prepared_array;
+	
 	}
 	/**
 	 * Prepares data for single character isk per day no acumulating
@@ -858,21 +808,20 @@ class Top_Ratter {
 			return null;
 		}
 		
-		// echo $wpdb->last_query;
 		// loop trough every day in the interval and createy empty array
 		$start2 = new DateTime ( $start );
-		// $end2 = new DateTime( $end );
+		
 		// add 1 day to the end date.
 		$end2 = date ( "Y-m-d H:i:s", strtotime ( $end . " +1 day" ) );
 		$end3 = new DateTime ( $end2 );
-		// define 1 day intervaö
+		// define 1 day interval
 		$interval = DateInterval::createFromDateString ( '1 day' );
 		$period = new DatePeriod ( $start2, $interval, $end3 );
 		// define empty char array
 		$character_data = null;
 		// loop trough the time period
 		foreach ( $period as $dt ) {
-			// echo $dt->format( "Y-m-d H:i:s" );
+			
 			$character_data [$dt->format ( "Y-m-d" )] = 0;
 		}
 		$temp2 = $character_data;
@@ -880,10 +829,9 @@ class Top_Ratter {
 		// now put the data from db in to those fields
 		foreach ( $character as $tick ) {
 			
-			// echo' this chars entry '.$tick['owner_id'];
 			// run trough the dates for ech tick
 			foreach ( $character_data as $key => $value ) {
-				// $total=null;
+				
 				// get only date , we dont need hours nd such
 				$pieces = explode ( " ", $tick ['date_acquired'] );
 				
@@ -894,14 +842,6 @@ class Top_Ratter {
 				}
 			}
 		}
-		// $ready_array = null;
-		// // $previous_amount = 0;
-		
-		// foreach ( $temp2 as $key => $value ) {
-		
-		// $ready_array [$key] = $value;
-		// $total_if_was_ratting_at_all += $value;
-		// }
 		
 		// dont return if he was not ratting at all.
 		if ($total_if_was_ratting_at_all > 0) {
@@ -960,7 +900,7 @@ class Top_Ratter {
 				$prepared_array [0] [] = $key;
 			}
 			
-			// -------------
+			
 			$start2 = new DateTime ( $start );
 			$end2 = date ( "Y-m-d H:i:s", strtotime ( $end . " +1 day" ) );
 			$end3 = new DateTime ( $end2 );
@@ -985,7 +925,6 @@ class Top_Ratter {
 		}
 		
 		return $prepared_array;
-		// return $prepared_array;
 	}
 	/**
 	 * Prepares data for a single char _acumulating
@@ -1005,10 +944,10 @@ class Top_Ratter {
 		// get data for character
 		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_ratting_data` WHERE `date_acquired` BETWEEN '" . $start . "' AND '" . $end . "' AND `owner_id`='" . $character_id . "'";
 		$character = $wpdb->get_results ( "$sql", ARRAY_A );
-		// echo $wpdb->last_query;
+		
 		// loop trough every day in the interval and createy empty array
 		$start2 = new DateTime ( $start );
-		// $end2 = new DateTime( $end );
+		
 		// add 1 day to the end date.
 		$end2 = date ( "Y-m-d H:i:s", strtotime ( $end . " +1 day" ) );
 		$end3 = new DateTime ( $end2 );
@@ -1019,25 +958,25 @@ class Top_Ratter {
 		$character_data = null;
 		// loop trough the time period
 		foreach ( $period as $dt ) {
-			// echo $dt->format( "Y-m-d H:i:s" );
+			
 			$character_data [$dt->format ( "Y-m-d" )] = 0;
 		}
 		$temp2 = $character_data;
-		// echo var_dump($temp2);
+	
 		// now put the data from db in to those fields
 		foreach ( $character as $tick ) {
 			
-			// echo' this chars entry '.$tick['owner_id'];
+			
 			// run trough the dates for ech tick
 			foreach ( $character_data as $key => $value ) {
-				// $total=null;
+				
 				// get only date , we dont need hours nd such
 				$pieces = explode ( " ", $tick ['date_acquired'] );
 				
 				// if the date is the same as the date from the date loop array add the isk
 				if ($pieces [0] == $key) {
 					$temp2 [$key] += $tick ['amount'];
-					// $total+=$tick['amount'];
+					
 				}
 			}
 		}
@@ -1059,9 +998,7 @@ class Top_Ratter {
 			return $ready_array;
 		}
 		return null;
-		
-		// echo' kek ';
-		// echo var_dump($temp2);
+
 	}
 	/**
 	 * inserts XML char response data in to table
@@ -1075,8 +1012,6 @@ class Top_Ratter {
 		$xml = new Top_Ratter_Xml_Api ();
 		$chars = $xml->update_corp_member_list ( $corp_data_array );
 		global $wpdb;
-		
-		// INSERT IGNORE INTO `wp_tr_characters`(`id`, `corp_id`, `owner_id`, `ownerName2`) VALUES ([value-1],[value-2],[value-3],[value-4])
 		
 		if ($chars) {
 			$sql = "INSERT IGNORE INTO `" . $wpdb->prefix . "tr_characters`(`corp_id`, `owner_id`, `ownerName2`) VALUES ";
@@ -1095,9 +1030,7 @@ class Top_Ratter {
 			
 			$wpdb->query ( $sql );
 		}
-		// echo'members<pre>';
-		// echo var_dump($chars);
-		// echo'</pre>';
+
 	}
 	
 	/**
@@ -1132,7 +1065,7 @@ class Top_Ratter {
 		
 		/*
 		 * loop trough all main chars
-		 * check if teh records match any of the chars for this user and if the ydo add them to main char array
+		 * check if teh records match any of the chars for this user and if they do add them to main char array
 		 * and remove from ratting array
 		 */
 		if ($unsorted_data) {
@@ -1157,7 +1090,7 @@ class Top_Ratter {
 							if ($unique_char ['ownerName2'] == $alt_toon ['ownerName2']) {
 								// this is one of related chars.
 								$sorted_mains [$main_char ['ownerName2']] ['total'] += $unique_char ['total'];
-								// echo"ALT char had value:".$alt_toon['total']."<br>";
+								
 								
 								// unset the value for that unique char
 								unset ( $unsorted_data [$char_index] );
@@ -1183,7 +1116,7 @@ class Top_Ratter {
 							$sorted_mains [] = $unsorted_char;
 						}
 					} else {
-						// echo '_UNSOrotRED<br>';
+						
 						// return unsorted cus there is nothing to sort.
 						usort ( $unsorted_data, array (
 								$this,
@@ -1200,13 +1133,6 @@ class Top_Ratter {
 					) );
 				}
 				
-				// echo 'unsorted data<pre>';
-				// echo var_dump($unsorted_data);
-				// echo '</pre>';
-				
-				// echo 'sorted mains<pre>';
-				// echo var_dump($sorted_mains);
-				// echo '</pre>';
 			}
 		}
 		return $sorted_mains;
@@ -1214,7 +1140,12 @@ class Top_Ratter {
 	/**
 	 * Sorts the PVP data by main chars if such is defined.
 	 *
-	 * @param date $start        	
+	 * @param date $start 
+	 * @param date $end
+	 * @param multiarray $data_array
+	 * 
+	 * @todo Make admins be able to choose how much pvp chars to show not hardcoded 5
+	 *        	
 	 * @return $soreted_main_char_array array of totals for each main character.
 	 */
 	public function get_top5_pvp_kills_by_main_characters($start, $end) {
@@ -1238,22 +1169,11 @@ class Top_Ratter {
 		AND " . $wpdb->prefix . "tr_pvp_chars_kills.corp_id='" . $corp_data ['corporation_id'] . "' GROUP BY `ownerName2` ORDER BY total DESC";
 		
 		
-		
-		
-		
 		$top_pvpers = $wpdb->get_results ( $sql, ARRAY_A );
 		
 		// sort them by main chars.
 		
-// 		echo 'All kills<pre>';
-// 		echo var_dump($sql);
-// 		echo '</pre>';
-		
 		$sorted_kills_by_main = $this->gather_data_by_main_chars ( $start, $end, $top_pvpers );
-		
-// 		echo 'Sorted kills by main<pre>';
-// 		echo var_dump($sorted_kills_by_main);
-// 		echo '</pre>';
 		
 		// sort the array desc
 		
@@ -1303,7 +1223,7 @@ class Top_Ratter {
 	}
 	/**
 	 * Collects characters that are not assigned to any user by corp
-	 * @$corp_id
+	 * @param int $corp_id
 	 * 
 	 * @return array containing chars and their id.
 	 */
@@ -1313,7 +1233,7 @@ class Top_Ratter {
 		 * select chars whos id is not found in the relation table.
 		 * try with double left join
 		 * http://stackoverflow.com/questions/10968767/mysql-select-rows-that-do-not-have-matching-column-in-other-table
-		 * it actually worked LOL
+		 * 
 		 * SELECT `ownerName2`
 		 * FROM wp_tr_characters
 		 * LEFT JOIN wp_tr_characters_relations ON wp_tr_characters_relations.related_char_id = wp_tr_characters.id
@@ -1373,9 +1293,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 				// insert rest as not main.
 				$this->insert_ignore_into_user_chars ( $user_id, $array_of_chars );
 			}
-			// echo' array_ of chars<pre>';
-			// echo var_dump($array_of_chars);
-			// echo'</pre>';
+
 		}
 	}
 	/**
@@ -1404,7 +1322,6 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 				$sql .= ',';
 			}
 		}
-		// echo $sql;
 		$wpdb->query ( $sql );
 	}
 	/**
@@ -1421,7 +1338,6 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		global $wpdb;
 		if (count ( $data_array ) > 0) {
 			
-			// just remove all chars
 			/*
 			 * target sql syntax
 			 * DELETE FROM kur_tr_users_chars WHERE `char_id` IN (1,9,18,4,3,12) AND `user_id`='1'
@@ -1442,7 +1358,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 				}
 			}
 			$sql .= ' AND `user_id`=' . $user_id . ';';
-			// echo $sql;
+			
 			$wpdb->query ( $sql );
 			
 			/*
@@ -1458,7 +1374,8 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 			
 			if (! $main_char) {
 				$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_users_chars` WHERE `user_id`='$user_id'";
-				// we only care for the first result cus we lazy and all that...
+				// pick the first char
+				//user can set its main chair on the page later.
 				$has_chars_at_all = $wpdb->get_row ( $sql, ARRAY_A );
 				if ($has_chars_at_all) {
 					// set the first record as main.
@@ -1476,7 +1393,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		}
 	}
 	/**
-	 * Changes the array so it only shows mains and those hwo are not assigned.
+	 * Changes the array so it only shows mains and those who are not assigned.
 	 *
 	 * @param array $data
 	 *        	array of chars information by days.
@@ -1486,9 +1403,6 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 	public function calculate_chart_data_by_mains($data) {
 		global $wpdb;
 		
-		// echo'all chars dump<pre>';
-		// echo var_dump($data);
-		// echo'</pre>';
 		
 		// acquire corporation id for the user that is doing the querry
 		$user_id = get_current_user_id ();
@@ -1502,7 +1416,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		
 		if ($data) {
 			$main_chars_data = null;
-			// $sorted_mains=null;
+			
 			if ($main_chars) {
 				foreach ( $main_chars as $main_char ) {
 					// acquire main char users chars for this corp.
@@ -1519,12 +1433,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 					 * ->loop trough the data and if found any use char set add the values for main
 					 * ->remove the char from data array
 					 */
-					
-					// unset($sorted_mains[$main_char['ownerName2']]);
-					
-					// echo'main char<pre>';
-					// echo var_dump($main_char['ownerName2']);
-					// echo'</pre>';
+	
 					
 					/*
 					 * ->get first char data(to get the dates) assign it as main and set all values to 0
@@ -1536,14 +1445,12 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 					}
 					
 					/*
-					 * ->loop trough the data and if found any use char set add the values for main
+					 * ->loop trough the data and if found any, use char set add the values for main
 					 */
 					foreach ( $related_chars as $r_char ) {
 						foreach ( $data as $char_name => $char_dates ) {
 							if ($char_name == $r_char ['ownerName2']) {
-								// echo'related char<pre>';
-								// echo var_dump($char_name);
-								// echo'</pre>';
+
 								/*
 								 * this is one of related characters, now summ up the values in loop.
 								 */
@@ -1553,17 +1460,11 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 								}
 								unset ( $data [$char_name] );
 								
-								// echo'dates <pre>';
-								// echo var_dump($char_dates);
-								// echo'</pre>';
 							}
 						}
 					}
 				}
 				
-				// echo'main chars sorted<pre>';
-				// echo var_dump($main_chars_data);
-				// echo'</pre>';
 				/*
 				 * thats it, add the remaining of the free chars to the main char array and return in.
 				 */
@@ -1572,8 +1473,6 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 					foreach ( $data as $char_name_d => $char_dates_d ) {
 						$main_chars_data [$char_name_d] = $char_dates_d;
 					}
-				} else {
-					// well all chars were asigned so this us useles lol.
 				}
 			}
 		}
@@ -1615,11 +1514,12 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		
 		$url = "https://zkillboard.com/api/kills/corporationID/$corp_id/year/$year/month/$month/page/$page/orderDirection/asc/";
 		
+		//for debuging purpouses and to see if it is even working because they change stuff often.
 		echo $url . '<br><br>';
 		$ch = curl_init ( $url );
 		curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, 1 );
 		curl_setopt ( $ch, CURLOPT_HEADER, 0 );
-		// bad ssl disabled ÖD
+		// bad ssl disabled 
 		curl_setopt ( $ch, CURLOPT_SSL_VERIFYHOST, 0 );
 		curl_setopt ( $ch, CURLOPT_SSL_VERIFYPEER, 0 );
 		// ssl disable ends0
@@ -1628,40 +1528,25 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		
 		$response = curl_exec ( $ch );
 		
-// 		echo'<pre>';
-// 		echo var_dump($response);
-// 		echo'</pre>';
-		
 		if ($response === false) {
 			echo 'Curl error: ' . curl_error ( $ch );
-		} else {
-			
-// 			return $response;
-// 			$keka=json_decode($response, true);
 		}
-		// if($page<4){
-		// $data='dank data';
-		// }else{
-		// $data=array();
-		// }
 		
 		$data = json_decode ( $response, TRUE );
 		return $data;
 	}
 	/**
-	 * Calls api multiple times, and inserts all new data in the table.
+	 * Calls zkillboard api untill desired data is acquired, and inserts all new data in the table.
 	 *
 	 * @param int $corp_id        	
 	 *
 	 * @return void
 	 */
 	public function gather_zkill_data_for_corporation($corp_id) {
-		/*
-		 * find out wtf is wrong with zkillboard api.
-		 * 
-		 */
+		
 		global $wpdb;
 		date_default_timezone_set ( 'UTC' );
+		
 		// get last kill time stamp
 		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_pvp_chars_kills` WHERE `corp_id`='$corp_id' ORDER BY `timestamp` DESC";
 		$last_kill = $wpdb->get_row ( $sql, ARRAY_A );
@@ -1678,9 +1563,6 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 			$month_now = date ( "m", strtotime ( $laiks_tagad ) );
 
 			// if this is not the same month as records get last month and last year( if applicable)
-			/*
-			 * it tries to do the same old month all over again since the month doesnt change.
-			 */
 			if ($month_now == $month) {
 				
 				// this is the same month so find out the page from the db to start checking from
@@ -1697,7 +1579,6 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 				echo"<pre>Record Found: same month. Page Nr:$page</pre>";
 
 			} else {
-// 				echo"<pre>Record Found: different month.</pre>";
 				
 				// go back 25 days and get month number.
 				$past_date = date ( "Y-m-d H:i:s", strtotime ( "-25 days", strtotime ( $laiks_tagad ) ) );
@@ -1713,6 +1594,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 				 */
 				echo"<pre>Record Found: different month. Pulling  -25 days</pre>";
 				$zkill_api_old=$this->get_zkill_api_data_all_pages($corp_id,$year_p,$month_p,$page_p);
+				
 				// process the gathered information
 				$this->process_kills_and_insert ( $zkill_api_old, $corp_id );
 
@@ -1735,12 +1617,6 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 
 		}
 		
-		/*
-		 * get z kill data from api.
-		 * if its fresh it will get this month.
-		 * if its same month it will use the page to start from
-		 * if its different month it will insert the last month and insert this month in next cron cycle.
-		 */
 		$zkill_api=$this->get_zkill_api_data_all_pages($corp_id,$year,$month,$page);
 		
 		
@@ -1752,10 +1628,18 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		/**
 	 * Processes the data for the month and inserts in the db
 	 *
-	 * @param int $array_kills        	
 	 * @param int $corp_id        	
 	 *
-	 * @return void
+	 * @param int $year
+	 *        	2017
+	 *        	
+	 * @param int $month
+	 *        	double digits 01 -12
+	 *        	
+	 * @param int $page
+	 *        	01-99...       	
+	 *
+	 * @return $zkill_api array
 	 */
 	public function get_zkill_api_data_all_pages($corp_id,$year,$month,$page){
 		global $wpdb;
@@ -1770,7 +1654,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		do {
 		
 			//sleep for 5 sec because zkill api returns false if request too quick.
-// 			echo"<pre> Sleeping 5 sec </pre>";
+
 			sleep(3);
 				
 			$kill_data = $this->call_Zkill_api_curl ( $corp_id, $year, $month, $page );
@@ -1786,8 +1670,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 			}
 				
 			$page ++;
-			// 			echo ' !FRESH page after++ '.$page.'!<br>';
-			// 			echo ' !stop value after:'.var_dump($stop).'!<br>';
+
 		} while ( $stop == false );
 		
 		// insert last valid page in the db for further api pulls
@@ -1799,16 +1682,15 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		);
 		
 		echo"<pre>Inserting last valid page number in DB :$last_valid_page. </pre>";
-		// echo'uncomment to insert in table last page';
+
 		$wpdb->update ( $wpdb->prefix . 'tr_corporations', $data, $where );
 		
-// 		echo "$wpdb->last_query";
 		
 		return $zkill_api;
 	}
 	
 	/**
-	 * Processes the data for the month and inserts in the db
+	 * Processes the kills data for the month and inserts in the db
 	 *
 	 * @param int $array_kills        	
 	 * @param int $corp_id        	
@@ -1823,13 +1705,6 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 			// define temp storage
 			$temp_array = null;
 			
-// 			echo '<pre>';
-// 			echo var_dump($array_kills);
-// 			echo '</pre>';
-
-			/*
-			 * Change the results with the new Zkill api to properly sort data.
-			 */
 			
 			foreach ( $array_kills as $api_page ) {
 				foreach ( $api_page as $kill_event ) {
@@ -1844,17 +1719,13 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 							if ($attackers ['character_id'] != null) {
 								$temp_array [$attackers ['character_id']] [$kill_id] = $kill_time;
 							}
-							// the guy is from this corporation
-							
-							// $temp_array[$attackers['characterName']][]= $kill_id;
+				
 						}
 					}
 				}
 			}
 			
-// 						echo '<pre>';
-// 						echo var_dump($temp_array);
-// 						echo '</pre>';
+
 			/*
 			 * now i nsert in the table with sql that ignores the existing ones
 			 * http://stackoverflow.com/questions/20928181/only-insert-into-table-if-item-does-not-exist
@@ -1862,12 +1733,12 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 			 * INSERT IGNORE INTO wp_tr_pvp_chars_kills (`character`,`corp_id`,`kill_id`,`timestamp`)
 			 * VALUES ('Szchyactszky','98342863','61740744','2017-04-22 09:16:43'),('Szchyactszky','98342863','61740746','2017-04-22 09:16:59')
 			 *
-			 * so prepare the sql for each char and put them all togehter to be executed at once at the end. put ; at the end of each char sql.
+			 * so prepare the sql for each char and put them all togehter to be executed at once at the end. put ; at the end of each char sql. for speed ofc
 			 */
 			
 			$complete_sql = null;
 			
-			// $player_sql=null;
+			
 			$sql = "INSERT IGNORE INTO " . $wpdb->prefix . "tr_pvp_chars_kills (`char_id`,`corp_id`,`kill_id`,`timestamp`) VALUES ";
 			
 			$players_count = count ( $temp_array );
@@ -1897,12 +1768,6 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 			}
 			$wpdb->query ( $sql );
 			
-			// Print last SQL query string
-			// echo $wpdb->last_query.'<br>';
-			// Print last SQL query result
-			// echo $wpdb->last_result.'<br>';
-			// Print last SQL query Error
-			// echo $wpdb->last_error.'<br>';
 		}
 	}
 }
