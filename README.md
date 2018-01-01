@@ -9,9 +9,9 @@ Plugin also uses Zkilboard xml API to get the kills for the corporation by month
 Plugin has options to enable/disable certain functions like pvp stats, charts or ratting systems, but the core functionality of showing the data table can not be disabled, otherwise whats the point of plugin?
 
 # In development
-> Structures incomes. This should show how much incomes does the corporation get from all its structures.
-> Character bacground check. This should be available to the administrators/directors and should show bacground information about the character within the defined scopes.
-> Mining ledger. Something something mining rocks and showing stuff. It has not yet been decided.
+- Structures incomes. This should show how much incomes does the corporation get from all its structures.
+- Character bacground check. This should be available to the administrators/directors and should show bacground information about the character within the defined scopes.
+- Mining ledger. Something something mining rocks and showing stuff. It has not yet been decided.
 
 
 # Scopes. 
@@ -24,7 +24,7 @@ killmails.read_corporation_killmails.v1 esi-wallet.read_corporation_wallets.v1 e
 industry.read_corporation_mining.v1
 
 # Endpoints used by ESI api
-> Some endpoints might change or additional endpoints might be used to get the related additional data.
+- Some endpoints might change or additional endpoints might be used to get the related additional data.
 
 /v2/characters/{character_id}/assets/
 /characters/{character_id}/contacts/
