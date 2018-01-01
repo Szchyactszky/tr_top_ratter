@@ -1,0 +1,45 @@
+# SCOPES NEEDED #
+
+publicData characterLocationRead characterSkillsRead characterAccountRead corporationWalletRead corporationAssetsRead corporationKillsRead esi-location.read_location.v1 esi-location.read_ship_type.v1 esi-mail.read_mail.v1 esi-skills.read_skills.v1 esi-skills.read_skillqueue.v1 esi-wallet.read_character_wallet.v1 esi-wallet.read_corporation_wallet.v1 esi-characters.read_contacts.v1 esi-assets.read_assets.v1 esi-industry.read_character_jobs.v1 esi-characters.read_corporation_roles.v1 esi-location.read_online.v1 esi-contracts.read_character_contracts.v1 esi-killmails.read_corporation_killmails.v1 esi-wallet.read_corporation_wallets.v1 esi-industry.read_character_mining.v1 esi-industry.read_corporation_mining.v1
+
+# API END POINTS USED FOR THE SCOPES #
+
+/v2/characters/{character_id}/assets/
+
+/characters/{character_id}/contacts/
+
+/characters/{character_id}/contracts/
+/characters/{character_id}/contracts/{contract_id}/items/
+
+/characters/{character_id}/industry/jobs/
+/characters/{character_id}/mining/
+
+/corporation/{corporation_id}/mining/observers/
+
+/corporation/{corporation_id}/mining/extractions/
+
+/characters/{character_id}/location/
+
+/characters/{character_id}/ship/
+
+/characters/{character_id}/online/
+
+/characters/{character_id}/mail/
+
+/characters/{character_id}/skillqueue/
+
+/characters/{character_id}/skills/
+
+/characters/{character_id}/wallet/
+/characters/{character_id}/wallet/journal/
+/characters/{character_id}/wallet/transactions/
+
+
+
+
+
+
+
+
+
+

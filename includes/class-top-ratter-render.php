@@ -35,11 +35,6 @@ class Top_Ratter_Render {
 				'render_admin_ui' 
 		) );
 		
-				// add testing function for hiding series
-		add_shortcode ( 'kek_testing_random_javascript', array (
-				$this,
-				'testing_random_javascript' 
-		) );
 		
 		// add testing function for hiding series
 		add_shortcode ( 'sc_structures_incomes', array (
@@ -47,11 +42,7 @@ class Top_Ratter_Render {
 				'structures_incomes'
 		) );
 		
-		// add testing function for hiding series
-		add_shortcode ( 'sc_render_graph', array (
-				$this,
-				'render_graph'
-		) );
+
 		// parse zkill page with curl and get top 5 pvp for the month
 		add_shortcode ( 'update_data_cron_job', array (
 				$this,
@@ -63,11 +54,7 @@ class Top_Ratter_Render {
 				'render_main_char_selection_by_user'
 		) );
 		
-		// allows user to change his main character.
-		add_shortcode ( 'sc_assign_related_chars', array (
-				$this,
-				'render_admin_assign_related_characters'
-		) );
+
 		
 		// allows to calculate manualy in and out for drug production
 		add_shortcode ( 'sc_jdoepage_druglords', array (
@@ -82,6 +69,10 @@ class Top_Ratter_Render {
 // 				$this,
 // 				'stealthy_ninja_table_fix'
 // 		) );
+
+		
+		//call SSO class for shortcodes to work
+		$SSO = new Top_Ratter_SSO ();
 	}
 	/**
 	 * This function creates Menu items TOP RATTER in the admin menu and ties content function to it.
@@ -98,15 +89,7 @@ class Top_Ratter_Render {
 	 */
 	public function topratter_admin_setup(){
 		
-		/*
-		 * # Introducttion and what it does
-		 * # All the shortcodes and whats the purpouse of them
-		 * #
-		 * ### Corporation set up page add, edit, delete
-		 * ### Additional values like tax% and how much etc.
-		 * #### Assign user to corporation
-		 * #### Assign users chars to user
-		 */
+
 		
 		echo'<h1> Welcome to Top Ratter </h1>';
 		echo'<p> Top Ratter started out as a gig for Eve Online developers competition, and now has evolved to something that we hope you will enjoy(if you happen to use it).</p>';
@@ -118,21 +101,37 @@ class Top_Ratter_Render {
 		echo'<p> For now the short codes are as follows:</p>';
 		echo'<p><b style="font-weight: 900;">[sc_show_ratting_report]</b> This will show the table of ratted isk + pvp table + graphs for the isk by character. <br>
 				<b style="font-weight: 900;">[sc_structures_incomes]</b> Shows incomes for the structures. <br>
-				<b style="font-weight: 900;">[sc_render_admin_ui]</b> Page where wp users are assigned to a corporation( or removed). <br>
-				<b style="font-weight: 900;">[update_data_cron_job]</b> This is a short code for cron job page, query this page to get the latest data from API. Update at least once a week for complete data coverage. <br>
+				<b style="font-weight: 900;">[update_data_cron_job]</b> This is a short code for cron job page, query this page to get the latest data from API. this is also triggered whith [sc_show_ratting_report] the cache timer is 30 minutes. <br>
 				<b style="font-weight: 900;">[sc_main_char_selection_form]</b> Short code that provides a way for a user to choose a main character from all its related characters.<br>
-				<b style="font-weight: 900;">[sc_assign_related_chars]</b> Short code that allows officers to assign characters to a specific wp users.<br>
+
+<b style="font-weight: 900;">[sc_tr_sso_login_image]</b>Outputs the SSO login image required for this plugin to work with SSO<br>
+<b style="font-weight: 900;">[render_user_sso_token_mgmt]</b> Outputs User Token management, user can unlink and delete the token here.<br>
+<b style="font-weight: 900;">[sc_sso_callback]</b> Short code that handles the SSO callback functionality. This short code shold be placed in the callback url page if you choose to change it from default http://yourhost/sso_callback/<br>
+
+
 				</p>';
 		echo'<p> If you are new to wordpress shortcodes simply copy and paste one of the short codes in the page editor and see how it works. <a href="https://codex.wordpress.org/Shortcode" >More info about wp shortcodes</a></p>';
 		
-		Echo '<h4>NOTE:</h4><p>Even tho i made it with multiple corporations in mind, it might not work as it has not been tested in multiple corporation environment.</p>';
 
-		echo '<h2>How to get API?</h2>';
-		echo '<p>This plugin needs only <b>"Account and Market"</b> API section. Api should be corporation API, character who is an officer or higher in corporation can make corporation API.</p>';
-		echo '<p> More in formation at <a href="https://community.eveonline.com/support/api-key"> https://community.eveonline.com/support/api-key</a>';
-		// manage corporation API
-		$this->render_corporation_mgmt();
+		echo '<h2>How to get SSO credentials?</h2>';
+		echo '<p> Head over to <a href="https://developers.eveonline.com/applications">https://developers.eveonline.com/applications</a> and "Create New Application" </p>';
 		
+		if(isset($_SERVER['HTTPS'])){
+		    $protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
+		}
+		else{
+		    $protocol = 'http';
+		}
+		$callback_url=$protocol . "://" . $_SERVER['HTTP_HOST'].'/sso_callback/';
+		
+		echo '<p><b style="font-weight: 900;">Callback URL:</b> <i>'.$callback_url.'</i></p>';
+		echo '<p><b style="font-weight: 900;">Scopes:</b> publicData characterLocationRead characterSkillsRead characterAccountRead corporationWalletRead corporationAssetsRead corporationKillsRead esi-location.read_location.v1 esi-location.read_ship_type.v1 esi-mail.read_mail.v1 esi-skills.read_skills.v1 esi-skills.read_skillqueue.v1 esi-wallet.read_character_wallet.v1 esi-wallet.read_corporation_wallet.v1 esi-characters.read_contacts.v1 esi-assets.read_assets.v1 esi-industry.read_character_jobs.v1 esi-characters.read_corporation_roles.v1 esi-location.read_online.v1 esi-contracts.read_character_contracts.v1 esi-killmails.read_corporation_killmails.v1 esi-wallet.read_corporation_wallets.v1 esi-industry.read_character_mining.v1 esi-industry.read_corporation_mining.v1</p>';
+		echo '<p><b style="font-weight: 900;">Connection Type:</b> Authentication & API Access </p>';
+		
+		// manage corporation XML API
+// 		$this->render_corporation_mgmt();
+		$SSO = new Top_Ratter_SSO ();
+		$SSO->render_SSO_credentials_mgmt();
 		
 		
 		Echo'<p> The end </p>';
@@ -140,7 +139,7 @@ class Top_Ratter_Render {
 		
 		
 	}
-	/**
+	/**depreciated
 	 * Outputs the function that is responsible for managing the corporation API.
 	 *
 	 * @return void
@@ -148,7 +147,7 @@ class Top_Ratter_Render {
 	public function render_corporation_mgmt(){
 		
 		echo'<h1> Corporation API management </h1>';
-	
+
 		// Add new corp form
 		$this->render_add_new_corp_form();
 
@@ -157,6 +156,7 @@ class Top_Ratter_Render {
 	
 	}
 	/**
+	 * depreciated
 	 * Ouput add New Corporation Funtion with data integrity
 	 * 
 	 * data is submited to prefix_admin_tr_action in class-top-ratter.php
@@ -229,10 +229,10 @@ class Top_Ratter_Render {
 
 		echo '<input type="submit" value="ADD" />';
 		
-		echo '<div>';
+		echo '</div>';
 		echo '</form>';
 	}
-	/**
+	/**depreciated
 	 * Ouput edit existing corp form function
 	 *
 	 * @return void
@@ -337,35 +337,48 @@ class Top_Ratter_Render {
 		if(is_user_logged_in()===true) {
 			global $wpdb;
 			
-			$user_id=get_current_user_id();
-			if($user_id==null){
+			$current_user = wp_get_current_user();
+			if($current_user==null){
 				//debuging for caching problem.
-				echo'Wow! I NEED HEALING !!! and btw your a spai !  Zis iz veri importante! Write Judge07 ingame mail that you saw this message!!!!';
+				echo'Wow! I NEED HEALING !!! and btw your a spai !  Zis iz veri importante! Write  Judge07#8167 on discord that you saw this message!!!!';
 				return;
 			}
 			
-			$user_corp = get_user_meta ( $user_id, 'Char_corp_asign', true );
-			if($user_corp!=null){
-				// render timepicker fields
+
+
+			$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_users_chars` WHERE user_id='$current_user->ID';";
+			$linked_characters = $wpdb->get_row ( "$sql", ARRAY_A );
+			
+			if($linked_characters){
+			    
+			    //try to refresh the ESI API data without cron job
+			    $this->cronjob_triger_shortcode_function();
+			    
+			    //ok show the data
+// 			    render timepicker fields
 				echo $this->render_datepicker_fields ();
 				// handle the GET values
 				$get_values_array = $this->handle_GET_values_non_admin_UI ();
 				// show the selection
 				echo '<p class="datafromto">Spai period: '.$get_values_array ['T1'] . ' -> ' . $get_values_array ['T2'].'</p>';
 				//find out what corp user belongs to
-				
 
-				
-				//render the table of each char total isk
+				//render the table of each char total isk and pvp kills is selected.
 				$this->display_in_time_period ( $get_values_array ['T1'], $get_values_array ['T2'] );
-				
-				
+
+				/*
+				 * check for switches to show or not to show the graphs
+				 */
 				$this->render_graph( $get_values_array ['T1'], $get_values_array ['T2'] );
+				
+				
+				$this->author_note();
 
 			}else{
-				echo'You are totally a spai, PM an officer ingame to confirm your spainess before you can proceed.';
+			    // no character thats in the corp.
+
+			    echo'You do not have character that is currently in the corporation.';
 			}
-			
 		}else{
 			// register/ login.
 			echo'Wow, Such Spai, Much Look, Very Need login for access!<br><br>';
@@ -375,6 +388,16 @@ class Top_Ratter_Render {
 			echo'<img src="http://reallifeoutpost.com/wp-content/uploads/2017/08/wF2skTX.jpg" alt="Spai?" height="auto" width="auto">';
 		}
 	}
+	/**
+	 * Echo author note
+	 */
+	public function author_note(){
+	    echo'<p>* Main developer: <b>Judge07</b>, Discord username : Judge07#8167 </p>';
+	    echo'<p>** Special thanks to :<b> biggus dickus Aurilen</b>, <b>Hhatia</b> and <b>Jonathan Doe</b></p>';
+	    echo'<p>*** If you enjoy this statistics summary,  <b>Judge07</b> is allways accepting isk donations. No refunds :D!</p>';
+	    
+	}
+	
 	/**
 	 * displays TABLE withing specified time intervals 
 	 *
@@ -400,12 +423,8 @@ class Top_Ratter_Render {
 		
 		if ($chars != null) {
 			
-			// get the user id
-			$user_id = get_current_user_id ();
-			$user_meta = get_user_meta ( $user_id, 'Char_corp_asign', true );
-	
-			// pull only this users corporation data
-			$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_corporations` WHERE id='$user_meta';";
+			// pull corporation data
+			$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_sso_credentials`";
 			
 			$corp_data = $wpdb->get_row ( $sql, ARRAY_A );
 			
@@ -444,7 +463,7 @@ class Top_Ratter_Render {
 				echo number_format ( $char ['total'], 2, ',', ' ' );
 				echo '</td><td  class="align_right '.$tenth.' format_isk_cell">';
 				
-// 				$kek=$char ['total']*0.25;
+
 				$kek=$raturn_tax*$char ['total']/100;
 				
 				if($i>=$top_ratters_count){
@@ -464,37 +483,58 @@ class Top_Ratter_Render {
 			echo '	</tbody>
 				</table> ';
 			
-			
-			
 			//calculate how much is left for spendings
 			$remaining=$total_tax-$total_return;
 
 			// this is PVP prize pool table 
-			
-			/*
-			 * TODO 
-			 * #show/hide the top 5 pvp persons.
-			 * #get start date dynamicaly.
-			 */
 			if($corp_data['show_top5_pvp']==1){
 				if ($chars != null) {
-					if($start > '2017-10-01 09:00:00'){
+					if($start > '2017-11-01 09:00:00'){
 						$this->show_top_five_pvp_killers($start, $end,$remaining );
 					}else{
 						echo'<p class="spai_better_no_data">PVP data not aviable before "The Purge" *sad fejs*<p>';
 					}
 				}else{
-					echo'Welp! no one was ratting, so there is no pvp prizes...';
+					echo'Welp! No one was ratting, so there is no pvp prizes...';
 				}
 			}
 			echo '<br><br>';
 			
 			/*
 			 * only show this for officers
+			 * 
+			 * @todo Check if this character is officer (has director role) and show it as well
+			 *       for now all directors are admins as per old version.
+			 * 
 			 */
 			if(current_user_can('administrator')){
 				echo'<div class="format_isk_div"><button id="format_isk" class="format_isk_btn">PRESS ME !</button></div>';
 			}
+			
+			
+			
+			/* 
+			 * TODO 
+			 * 
+			 * ID: fq0hfq0wfhq0w8fhq0wfh
+			 *  
+			 * Show selected systems npc kills in the selected time period totals by characters.
+			 *  able to choose more than one system.
+			 *  show all chosen systems.
+			 *
+			 *  show also all systems and percentage by corp total 50% in this sysem 24% in this system etc.
+			 *  
+			 *  
+			 *  ## new systems table tr_systems <- stores all existing systems from ratting data.
+			 *  id, system_id,system_name,display_system int(1) <- if this is 1 then show solo system data.
+			 *  
+			 *  update the table after api pull wiith new systems and new system names if there is any
+			 *  
+			 *
+			 */
+			
+			
+			
 			
 			
 			
@@ -589,10 +629,8 @@ class Top_Ratter_Render {
 		return $array_of_get_values;
 	}
 	/**
-	 * Render ADMIN/ officer ui for editing corp api data
+	 * Render ADMIN/ officer ui with access to all token data
 	 *
-	 * renders the admin page for editing/updaring corp api.
-	 * and assigning users to corps.
 	 *
 	 * @return null
 	 */
@@ -601,9 +639,8 @@ class Top_Ratter_Render {
 		if (current_user_can ( 'manage_options' )) {
 			global $wpdb;
 			
-			echo'<p>This is where you assign users visibility for corporation.If in doubt PM Judge07 ingame</p>';
-			echo'<p>Information format:<br>';
-			echo'ID-login-> coporation</p>';
+			echo'<p>This is where you can spai and be creepy and all that stuff all the info on the users characters will be displayed here.</p>';
+
 			
 			
 			
@@ -622,7 +659,7 @@ class Top_Ratter_Render {
 			echo '</form>';
 		}
 	}
-	/**
+	/**DEPRECIATED
 	 * Render the select element next to each users field.
 	 *
 	 * renders the admin page for editing/updaring corp api.
@@ -671,19 +708,24 @@ class Top_Ratter_Render {
 		 * 
 		 * 
 		 */
-
-// 		echo $start.'****'.$end;
+	    
+	    global $wpdb;
 		
 // 		echo'<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>';
 		
-		echo'<script type="text/javascript" src="https://www.google.com/jsapi"></script>';
-		
-		
-		$this->output_chart1_js_code($start, $end);
-		
-		$this->output_chart_2_js_code($start, $end);
-		
-
+	    $sql = "SELECT * FROM `" . $wpdb->prefix . "tr_sso_credentials`;";
+	    $settingz = $wpdb->get_row ( "$sql", ARRAY_A );
+	    
+	    //check if at least one chart needs to be shown.
+	    if($settingz['show_chart1']=='1'||$settingz['show_chart2']=='1'){
+	        echo'<script type="text/javascript" src="https://www.google.com/jsapi"></script>';
+	    }
+	    if($settingz['show_chart1']=='1'){
+	        $this->output_chart1_js_code( $start, $end);
+	    }
+	    if($settingz['show_chart2']=='1'){
+	        $this->output_chart_2_js_code( $start, $end);
+	    }
 	}
 
 	/**
@@ -1089,24 +1131,17 @@ EOD;
 	 */
 	public function structures_incomes(){
 		
-		echo'<pre> Structures incomes ---</pre>';
+// 		echo'<pre> Structures incomes --- coming soon ™</pre>';
+		
+		
+// 		return;
 		
 		if(is_user_logged_in()==true) {
-			global $wpdb;
-				
-			$user_id=get_current_user_id();
-			$user_corp = get_user_meta ( $user_id, 'Char_corp_asign', true );
-			if($user_corp!=null){
 				if(current_user_can('administrator')){
-					
-					$sql = "SELECT * FROM " . $wpdb->prefix . "tr_corporations WHERE id=$user_corp";
-					// go trough array and find unique
-						
-					$corp_data_array = $wpdb->get_row ( "$sql", ARRAY_A );
-			
-					$xml = new Top_Ratter ();
-					$xml->update_ratting_data ( $corp_data_array );
-					
+
+				    global $wpdb;
+				    $this->cronjob_triger_shortcode_function();
+				    
 					// render timepicker fields
 					echo $this->render_datepicker_fields ();
 					
@@ -1126,9 +1161,8 @@ EOD;
 						echo '<table class="tr_selection">
 								<thead>
 								<tr>
-								<th class="charname"><span>Who</span></th>
 								<th class="charname" ><span>When</span></th>
-								<th class="tax_right" ><span>refTypeID</span></th>
+								<th class="tax_right" ><span>refType</span></th>
 								<th class="charname" ><span>How Much</span></th>
 								</tr>
 								</thead>
@@ -1140,29 +1174,18 @@ EOD;
 						}
 						echo'<tr>
 								<td class="bottom_border_2"></td>
-								<td class="bottom_border_2"></td>
 								<td class="bottom_border_2">Total:</td>	
 								<td class="align_right bottom_border_2">'.number_format ( $total, 2, ',', ' ' ).'</td>
 								</tr>';
 						
+						
 						foreach ( $structures_data as $record ) {
 							echo '<tr>';
-							echo'<td>';
-							echo $record ['who_used'];
-							echo '</td>
-								<td  class="align_right">';
+							echo '<td  class="align_right">';
 							echo $record ['date_acquired'];
 							echo '</td>
 								<td  class="align_right">';
-							if($record ['refTypeID']=='120'){
-								echo'Industry Job Tax';
-								
-							}elseif($record ['refTypeID']=='128'){
-								echo'Jump Clone Activation Fee';
-							}else{
-								echo'Jump Clone Installation Fee';
-							}
-
+							echo $record ['ref_type'];
 							echo '</td>
 								<td  class="align_right">';
 							echo number_format ( $record['amount'], 2, ',', ' ' );
@@ -1178,16 +1201,13 @@ EOD;
 		
 
 				}else{
-					echo'R.I.P. No Access for you...';
+					echo'R.I.P. No Access for you... Only officers allowed!';
 				}
 			}else{
-				echo'Officers only biach!';
+				echo'Login required!';
 			}
 				
-		}else{
-			// register/ login.
-			echo'Wow, Such Spai, Much Look, Very Need login for access!';
-		}
+
 		
 		
 
@@ -1205,41 +1225,65 @@ EOD;
 	 * @return void
 	 */
 	public function cronjob_triger_shortcode_function(){
-		
+
 
 		Global $wpdb;
-		
 
-		
 		//get all corps
-		$sql="SELECT * FROM `" . $wpdb->prefix . "tr_corporations`";
-		$corp_table=$wpdb->get_results($sql,ARRAY_A);
+		$sql="SELECT * FROM `" . $wpdb->prefix . "tr_sso_credentials`";
+		$corporation=$wpdb->get_row($sql,ARRAY_A);
 		
-		if($corp_table!=false){
-			$top_rat=new Top_Ratter();
-			//run for each corp
-			foreach($corp_table as $corporation){
-				
+		date_default_timezone_set('UTC');
+		$time_now = date ( "Y-m-d H:i:s" );
+		echo'<p>Api cached until '.$corporation['cached_until'].' UTC </p>';
+		
+		if($corporation['cached_until']<$time_now||$corporation['cached_until']==null){
+		    // do the call
+		    if($corporation!=false){
+		        $top_rat=new Top_Ratter();
+		        
+		        
+		        /*
+		         * Update the cache timer first in case multiple loads happen within the same period.
+		         */
 
-				/*
-				 * Redo the gather mechanism because this will run the xml call again
-				 * but the xml timer has been set already so it will return null as to not hammer the xml endpoint
-				 * 
-				 * So for now just use one corp.
-				 * 
-				 */
-				
-				//update ratting data
-				$top_rat->update_ratting_data ( $corporation );
-				
-				
-				//update zkill data
-				$top_rat->gather_zkill_data_for_corporation($corporation['corporation_id']);
-				
-				//update user list.
-				$top_rat->update_corp_member_list_in_db ( $corporation );
-	
-			}
+		        
+		        $cache_timer = date("Y-m-d H:i:s",strtotime(date("Y-m-d H:i:s")." +30 minutes"));
+		        //set data to update
+		        $data2 = array (
+		            'cached_until' => $cache_timer
+		        );
+		        //where to update.
+		        $where = array (
+		            'id' => $corporation ['id']
+		        );
+		        //run update
+		        $wpdb->update ( $wpdb->prefix . 'tr_sso_credentials', $data2,$where );
+		       
+		       
+		        
+		        
+		        //update ratting data and structure incomes ( comes from same api)
+		        $top_rat->update_ratting_data ();
+		        
+		    
+		        
+		        /*
+		         * Zkilboard api keep changing much frequent than i have time to fix adjust to it.
+		         */
+		        if($corporation['show_top5_pvp']==1){
+		             //update zkill data
+		        $top_rat->gather_zkill_data_for_corporation($corporation['corporation_id']);
+		        }
+		       
+		        
+		        
+
+		        
+		        
+		        echo'<p>API Data Updated, Sorry it took a while.</p>';
+		        
+		    }  
 		}
 	}
 	
@@ -1355,7 +1399,7 @@ EOD;
 		}
 	}
 
-	/**
+	/**DEPRECIATED
 	 * Assign characters to the user.
 	 *
 	 * If there is no chars yet, first assigned character will be the main.
@@ -1435,9 +1479,7 @@ EOD;
 				//select only chars for this corp.
 				$not_related_chars=$tr->get_not_assigned_chars($user_corp);
 				
-				/*
-				 * MAKE THAT IT STAYS ON THE USER BY GET VALUE.
-				 */
+
 				echo'<div class="fancy_notice_admins">Hold "Ctrl" to select multiple chars. <br> Users that has not been assigned corporation will not show here.<br> Admin can only assign users from the same corp he is assigned to.</div>';
 				if($related_chars){
 					

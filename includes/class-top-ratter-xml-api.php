@@ -1,5 +1,5 @@
 <?php
-/**
+/** DEPRECIATED
  * The tr_top ratter_xml_api is class that acquires the data from EvE Online xml api endpoint.
  *
  * The top_ratter_xml api class contains functions to gather data from eve online xml api endpoint and present it in requierd format.
@@ -13,7 +13,7 @@
  * @since 1.0.0
  */
 class Top_Ratter_Xml_Api {
-	/**
+	/**DEPRECIATED
 	 * Executes api calling with curl
 	 *
 	 * This function calls xml api endpoint with curl and returns SimpleXMLElement object
@@ -45,7 +45,7 @@ class Top_Ratter_Xml_Api {
 			return $xml;
 		}
 	}
-	/**
+	/**DEPRECIATED
 	 * Calls for api endpoint with specified parameters
 	 *
 	 * This function querries the eve online api endpoint for corporation wallet.
@@ -115,7 +115,7 @@ class Top_Ratter_Xml_Api {
 		}
 		return $xml_array;
 	}
-	/**
+	/**DEPRECIATED
 	 * Executes curl call to get all corporation members.
 	 *
 	 * @param array $corp_data_array

@@ -20,6 +20,7 @@ class Top_Ratter {
 		// include other classes
 		require_once plugin_dir_path ( __FILE__ ) . 'class-top-ratter-render.php';
 		require_once plugin_dir_path ( __FILE__ ) . 'class-top-ratter-xml-api.php';
+		require_once plugin_dir_path ( __FILE__ ) . 'class-top-ratter-sso.php';
 		
 		// enque styles for this plugin
 		add_action ( 'wp_enqueue_scripts', array (
@@ -92,31 +93,27 @@ class Top_Ratter {
 	 * @return void
 	 */
 	public function table_check() {
-		// check if tables exist then create if not
-		global $wpdb;
-		
-		$required_tables = array (
-				"$wpdb->prefix" . "tr_corporations",
-				"$wpdb->prefix" . "tr_ratting_data",
-				"$wpdb->prefix" . "tr_characters",
-				"$wpdb->prefix" . "tr_structures_income",
-				"$wpdb->prefix" . "tr_pvp_chars_kills",
-				"$wpdb->prefix" . "tr_users_chars",
-				// "$wpdb->prefix" . "tr_sso_app_data",
-				"$wpdb->prefix" . "tr_sso_tokens",
-				"$wpdb->prefix" . "tr_sso_auth_code" 
-		) 
-
-		;
-		foreach ( $required_tables as $table ) {
-			$val = $wpdb->get_var ( "SHOW TABLES LIKE '$table'" );
-			if ($val == $table) {
-				// exists
-			} else {
-				// create non existing
-				$this->create_table ( $table );
-			}
-		}
+	    // check if tables exist then create if not
+	    global $wpdb;
+	    
+	    $required_tables = array (
+	        "$wpdb->prefix" . "tr_ratting_data",
+	        "$wpdb->prefix" . "tr_characters",
+	        "$wpdb->prefix" . "tr_structures_income",
+	        "$wpdb->prefix" . "tr_pvp_chars_kills",
+	        "$wpdb->prefix" . "tr_users_chars",
+	    )
+	    
+	    ;
+	    foreach ( $required_tables as $table ) {
+	        $val = $wpdb->get_var ( "SHOW TABLES LIKE '$table'" );
+	        if ($val == $table) {
+	            // exists
+	        } else {
+	            // create non existing
+	            $this->create_table ( $table );
+	        }
+	    }
 	}
 	/**
 	 * Creates table
@@ -131,91 +128,51 @@ class Top_Ratter {
 	 *
 	 */
 	private function create_table($table) {
-		global $wpdb;
-		require_once (ABSPATH . 'wp-admin/includes/upgrade.php');
-		switch ($table) {
-			case "$wpdb->prefix" . "tr_sso_auth_code" :
-				
-				$sql = "CREATE TABLE `" . $wpdb->prefix . "tr_sso_auth_code`(
-						  `id` INT(100) NOT NULL AUTO_INCREMENT,
-						  `code` VARCHAR(250) NOT NULL,
-						  `state` VARCHAR(250) NOT NULL,
-						  PRIMARY KEY(`id`)
-						) ENGINE = InnoDB;";
-				
-				dbDelta ( $sql );
-				break;
-			case "$wpdb->prefix" . "tr_sso_tokens" :
-				
-				$sql = "CREATE TABLE `" . $wpdb->prefix . "tr_sso_tokens`(
-					  `id` INT(100) NOT NULL AUTO_INCREMENT,
-					  `access_token` VARCHAR(250) NOT NULL,
-					  `token_type` VARCHAR(250) NOT NULL,
-					  `expires_in` VARCHAR(250) NOT NULL,
-					  `refresh_token` VARCHAR(250) NOT NULL,
-					  `ts` DATETIME NOT NULL,
-					  PRIMARY KEY(`id`)
-					) ENGINE = InnoDB;";
-				
-				dbDelta ( $sql );
-				break;
-			case "$wpdb->prefix" . "tr_corporations" :
-				
-				$sql = "CREATE TABLE `" . $wpdb->prefix . "tr_corporations`(
-						  `id` INT(100) NOT NULL AUTO_INCREMENT,
-						  `key_id` VARCHAR(100) NOT NULL,
-						  `vCode` VARCHAR(200) NOT NULL,
-						  `account_key` INT(10) NOT NULL,
-						  `corp_name` VARCHAR(200) NOT NULL,
-						  `corporation_id` INT(10) NOT NULL,
-						  `corp_return_percent` INT(3) NOT NULL,
-						  `corp_top_ratter_count` INT(3) NOT NULL,
-						  `show_top5_pvp` INT(1) NOT NULL,
-						  `cached_until` DATETIME NULL COMMENT 'cache check frequency',
-						  `z_kill_api_page` INT(10) NOT NULL COMMENT 'Zkil API page, handled by system',
-						  PRIMARY KEY(`id`)
-						) ENGINE = InnoDB;";
-				
-				dbDelta ( $sql );
-				break;
-			case "$wpdb->prefix" . "tr_ratting_data" :
-				$sql = "CREATE TABLE `" . $wpdb->prefix . "tr_ratting_data`(
+	    global $wpdb;
+	    require_once (ABSPATH . 'wp-admin/includes/upgrade.php');
+	    switch ($table) {
+	        
+	        case "$wpdb->prefix" . "tr_ratting_data" :
+	            $sql = "CREATE TABLE `" . $wpdb->prefix . "tr_ratting_data`(
 						  `id` INT(200) NOT NULL AUTO_INCREMENT,
 						  `owner_id` INT(100) NOT NULL COMMENT 'references a char from chars table',
 						  `date_acquired` DATETIME NOT NULL COMMENT 'when char gets its ticks ingame',
 						  `amount` FLOAT NOT NULL,
-						  PRIMARY KEY(`id`)
+                          `system_id` INT(20) NULL,
+                          `npc_kills` INT(20) NULL COMMENT 'total amount of npc kills within the tick',
+                          `ref_id` VARCHAR(100) NOT NULL,
+						  PRIMARY KEY(`id`),
+                          UNIQUE (`ref_id`)
 						) ENGINE = InnoDB;";
-				
-				dbDelta ( $sql );
-				break;
-			case "$wpdb->prefix" . "tr_characters" :
-				$sql = "CREATE TABLE `" . $wpdb->prefix . "tr_characters`(
+	            
+	            dbDelta ( $sql );
+	            break;
+	        case "$wpdb->prefix" . "tr_characters" :
+	            $sql = "CREATE TABLE `" . $wpdb->prefix . "tr_characters`(
 						  `id` INT(200) NOT NULL AUTO_INCREMENT,
-						  `corp_id` INT(200) NOT NULL,
 						  `owner_id` INT(100) NOT NULL,
 						  `ownerName2` VARCHAR(200) NOT NULL,
 						  PRIMARY KEY(`id`),
 						  UNIQUE (`owner_id`)
 						) ENGINE = InnoDB;";
-				
-				dbDelta ( $sql );
-				break;
-			case "$wpdb->prefix" . "tr_structures_income" :
-				$sql = "CREATE TABLE `" . $wpdb->prefix . "tr_structures_income`(
+	            
+	            dbDelta ( $sql );
+	            break;
+	        case "$wpdb->prefix" . "tr_structures_income" :
+	            $sql = "CREATE TABLE `" . $wpdb->prefix . "tr_structures_income`(
 						  `id` INT(250) NOT NULL AUTO_INCREMENT,
-						  `who_used` VARCHAR(250) NOT NULL,
-						  `refTypeID` INT(200) NOT NULL,
+						  `ref_id` VARCHAR(100) NOT NULL,
 						  `date_acquired` DATETIME NOT NULL,
 						  `amount` FLOAT NOT NULL,
+                          `ref_type` VARCHAR(100) NOT NULL,
 						  PRIMARY KEY(`id`)
 						) ENGINE = InnoDB;";
-				
-				dbDelta ( $sql );
-				break;
-			
-			case "$wpdb->prefix" . "tr_pvp_chars_kills" :
-				$sql = "CREATE TABLE `" . $wpdb->prefix . "tr_pvp_chars_kills`(
+	            
+	            dbDelta ( $sql );
+	            break;
+	            
+	        case "$wpdb->prefix" . "tr_pvp_chars_kills" :
+	            $sql = "CREATE TABLE `" . $wpdb->prefix . "tr_pvp_chars_kills`(
 						  `id` INT(250) NOT NULL AUTO_INCREMENT,
 						  `char_id` VARCHAR(250) NOT NULL,
 						  `corp_id` VARCHAR(250) NOT NULL,
@@ -224,190 +181,278 @@ class Top_Ratter {
 						  PRIMARY KEY(`id`),
 						 UNIQUE KEY `character_kills` (`char_id`,`kill_id`)
 						) ENGINE = InnoDB;";
-				
-				dbDelta ( $sql );
-				break;
-			case "$wpdb->prefix" . "tr_users_chars" :
-				$sql = "CREATE TABLE `" . $wpdb->prefix . "tr_users_chars`(
+	            
+	            dbDelta ( $sql );
+	            break;
+	        case "$wpdb->prefix" . "tr_users_chars" :
+	            $sql = "CREATE TABLE `" . $wpdb->prefix . "tr_users_chars`(
 						`uc_id` INT(10) NOT NULL AUTO_INCREMENT ,
 						`user_id` INT(10) NOT NULL ,
 						`char_id` INT(10) NOT NULL ,
 						`is_main_char` INT(1) NOT NULL ,
 						PRIMARY KEY (`uc_id`)
 						) ENGINE = InnoDB;";
-				
-				dbDelta ( $sql );
-				break;
-		}
+	            
+	            dbDelta ( $sql );
+	            break;
+	    }
 	}
 	
 	/**
-	 *
-	 *
 	 * Updates the ratting +structures data table with newest entries from api.
 	 *
-	 * This function pulls new data from xml api class and inserts it in to the table.
+	 * This function pulls new data from SSO api class and inserts it in to the table.
 	 * It first checks for the user in tr_characters table and adds new user if it doesnt exist.
-	 * then it processes the data from xml api, by checking last updated timestamp and continue from there.
+	 * then it processes the data from SSO api, by checking last inserted reftype_id and continue from there.
 	 *
-	 * @param string $corp_data_array
-	 *        	an array containg Vcode and Key_id for required API call.
-	 *        	
 	 * @return void
 	 */
-	public function update_ratting_data($corp_data_array) {
+	public function update_ratting_data() {
 		global $wpdb;
-		$xml = new Top_Ratter_Xml_Api ();
-		// get the ratting data from xml class
-		$xml_array = $xml->get_ratting_data ( $corp_data_array );
+		$sso = new Top_Ratter_SSO ();
+		// get the ratting data from sso class
+		$journal_records=$sso->esi_api_gather_ratted_isk_amount();
 		
-		if ($xml_array == false) {
+		if ($journal_records == null) {
+		    echo'<p>Problem with API :(</p>';
 			return;
 		}
-		
-		// filter the results for specific typeIDs
-		$data_array = $this->filter_ratting_data ( $xml_array );
-		$data_array_structures = $this->filter_ratting_data ( $xml_array, 'structures' );
-		
-		// loop trough the data array and insert in db if apropriate
-		if ($data_array != null) {
-			foreach ( $data_array as $tick ) {
-				
-				// check if this character is already in the db
-				$char_data = $wpdb->get_row ( "SELECT * FROM " . $wpdb->prefix . "tr_characters WHERE owner_id=" . $tick ['ownerID2'] . "", ARRAY_A );
-				
-				if ($char_data != null) {
-					// check for last entry
-					$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_ratting_data` WHERE `owner_id`='" . $tick ['ownerID2'] . "' ORDER BY `date_acquired` DESC";
-					$last_tick = $wpdb->get_row ( "$sql", ARRAY_A );
-					// insert in the db only if it is higher than the last entry in db.
-					if ($tick ['date'] > $last_tick ['date_acquired']) {
-						$data2 = array (
-								'owner_id' => $tick ['ownerID2'],
-								'date_acquired' => $tick ['date'],
-								'amount' => $tick ['amount'] 
-						);
-						$wpdb->insert ( $wpdb->prefix . 'tr_ratting_data', $data2 );
-					}
-				} else {
-					// insert in the characters db
-					$data = array (
-							'owner_id' => $tick ['ownerID2'],
-							'corp_id' => $corp_data_array ['id'],
-							'ownerName2' => $tick ['ownerName2'] 
-					);
-					$wpdb->insert ( $wpdb->prefix . 'tr_characters', $data );
-					
-					// and insert the record in the ratting data db
-					$data2 = array (
-							'owner_id' => $tick ['ownerID2'],
-							'date_acquired' => $tick ['date'],
-							'amount' => $tick ['amount'] 
-					);
-					$wpdb->insert ( $wpdb->prefix . 'tr_ratting_data', $data2 );
-				}
-			}
+		if($journal_records=='no_officer_token'){
+		    echo'<p>There is no officer token, inform officers. Pretty please?</p>';
+		    return;
 		}
-		// pprocess the structure incomes.
-		if ($data_array_structures != null) {
-			
-			// get last record
-			$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_structures_income` ORDER BY `date_acquired` DESC LIMIT 5";
-			$last_record = $wpdb->get_row ( "$sql", ARRAY_A );
-			
-			foreach ( $data_array_structures as $transaction ) {
-				
-				if ($last_record != null) {
-					// get the record and do checks
-					if ($transaction ['date'] > $last_record ['date_acquired']) {
-						// insert only if positive, master vallet can give negative values if order put in other corp station
-						if ($transaction ['amount'] > 0) {
-							$data2 = array (
-									'who_used' => $transaction ['ownerName1'],
-									'date_acquired' => $transaction ['date'],
-									'refTypeID' => $transaction ['refTypeID'],
-									'amount' => $transaction ['amount'] 
-							);
-							$wpdb->insert ( $wpdb->prefix . 'tr_structures_income', $data2 );
-						}
-					}
-				} else {
-					// prepare the data for insertion only if positive(master wallet)
-					if ($transaction ['amount'] > 0) {
-						$data2 = array (
-								'who_used' => $transaction ['ownerName1'],
-								'date_acquired' => $transaction ['date'],
-								'refTypeID' => $transaction ['refTypeID'],
-								'amount' => $transaction ['amount'] 
-						);
-						$wpdb->insert ( $wpdb->prefix . 'tr_structures_income', $data2 );
-					}
-				}
-			}
+
+		$bounties_array = $this->filter_ratting_data ( $journal_records);
+		$structures_array = $this->filter_ratting_data ( $journal_records,true);
+		
+		/*
+		 * Bounties akka ratting data to be inserted.
+		 */
+		if($bounties_array){
+		    
+		  $this->insert_new_characters_in_database($bounties_array);
+		  
+		  $bounties_to_insert=null;
+		  
+		  $sql_max_ref_id="SELECT MAX(`ref_id`) AS ref_id FROM `" . $wpdb->prefix . "tr_ratting_data`";
+		  $max_ref_id=$wpdb->get_row($sql_max_ref_id,ARRAY_A);  
+		  
+		  if($max_ref_id['ref_id']!==NULL){
+		      foreach($bounties_array as $bounty_record){
+		          // select only those that is not in the db
+		          if($bounty_record['ref_id']>(float)$max_ref_id['ref_id']){
+		              //this is new record that is not in the db yet
+		              $bounties_to_insert[]=$bounty_record;
+		          }  
+		      }
+		  }else{
+                // insert all since nothing in db
+		      $bounties_to_insert=$bounties_array;
+		  }
+		  
+		  if($bounties_to_insert){
+		      $sql="INSERT INTO `" . $wpdb->prefix . "tr_ratting_data`(`owner_id`, `date_acquired`, `amount`, `system_id`, `npc_kills`, `ref_id`) VALUES";
+		      $count=count($bounties_to_insert);
+		      $i=1;
+		      foreach($bounties_to_insert as $record){
+		          $system_id=0;
+		          if($record['extra_info']['system_id']){
+		              $system_id=$record['extra_info']['system_id'];
+		          }
+		          $sql.='("'.$record['second_party_id'].'","'.$record['date'].'","'.$record['tax'].'","'.$system_id.'","'.$record['npc_kills'].'","'.$record['ref_id'].'")';
+		          
+		          if($i==$count){
+		              $sql.='';
+		          }else{
+		              $sql.=',';
+		          }
+		          $i++;
+		      }
+		      $sql.=';';
+		      $wpdb->query($sql);
+		  } 
 		}
+		
+		/*
+		 * Structures data insert starts here
+		 */
+		if($structures_array){
+		    $sql="INSERT INTO `" . $wpdb->prefix . "tr_structures_income`(`ref_id`, `date_acquired`, `amount`, `ref_type`) VALUES";
+		    $count=count($structures_array);
+		    $i=1;
+		    foreach($structures_array as $record){
+		  
+		        $sql.='("'.$record['ref_id'].'","'.$record['date'].'","'.$record['amount'].'","'.$record['ref_type'].'")';
+		        
+		        if($i==$count){
+		            $sql.='';
+		        }else{
+		            $sql.=',';
+		        }
+		        $i++;
+		    }
+		    $sql.=';';
+		    $wpdb->query($sql); 
+		}
+		
+		
+		
+		
+		
+		
+		
 	}
 	/**
 	 * Filters the data with valid refTypeID
 	 *
 	 * This function filters out the unnecessary refTypeID entries and return filtered array
 	 * 
-	 * @todo Give possibility for admins to choose what refTypeID they want to scan for.
-	 *
-	 * @param string $xml_array
-	 *        	raw xml associative array with latest 2650 entries
+	 * @param string $journal_records data retrieved from API containing corporation journal records.
 	 *        	
 	 * @return $filtered_data associative array of filtered data containing only valid entries.
 	 */
-	public function filter_ratting_data($xml_array, $switch = null) {
+	public function filter_ratting_data($journal_records, $switch = null) {
 		if ($switch == null) {
 			// define only valid refTypeID in the ratting
-			if ($xml_array != null) {
+		    if ($journal_records != null) {
 				$valid_refTypeID = array (
-						17,
-						33,
-						34,
-						85,
-						99 
+						'bounty_prizes' 
 				);
 				$filtered_data = null;
-				foreach ( $xml_array as $entry ) {
-					if (in_array ( $entry ['refTypeID'], $valid_refTypeID )) {
-						$filtered_data [] = $entry;
+				foreach ( $journal_records as $key=>$entry ) {
+					if (in_array ( $entry ['ref_type'], $valid_refTypeID )) {
+					    
+					    //parse the npc kills and summ them then make new array record 'npc_kills'
+					    $no_commas= explode(",", $entry['reason']);
+					    $npc_kills=0;
+					    if($no_commas){
+					        foreach($no_commas as $value){
+					            $no_seperator= explode(":", $value);
+					            $npc_kills+=(int)$no_seperator[1];
+					        }
+					    }
+					    $journal_records[$key]['npc_kills']=$npc_kills;
+					    					    
+					    /*
+					     * change the date to mysql compatible date
+					     */
+					    $mysql_date = str_replace('T', ' ', $entry['date']);
+					    $mysql_date = str_replace('Z', '', $mysql_date);
+					    $journal_records[$key]['date']=$mysql_date;
+					    
+					    $filtered_data [] =  $journal_records[$key];
 					}
 				}
-				
-				// sort the array by date ascending starting from oldest first.
-				usort ( $filtered_data, array (
-						$this,
-						"date_compare" 
-				) );
 			}
 			
 			return $filtered_data;
+			
 		} elseif ($switch == 'structures') {
 			// http://eveonline-third-party-documentation.readthedocs.io/en/latest/xmlapi/corporation/corp_walletjournal.html
-			if ($xml_array != null) {
+		    if ($journal_records != null) {
 				$valid_refTypeID = array (
-						120,
-						128,
-						55 
+						'docking_fee',
+						'office_rental_fee',
+    				    'factory_slot_rental_fee',
+    				    'corporation_dividend_payment',
+    				    'jump_clone_installation_fee',
+    				    'manufacturing',
+    				    'researching_technology',
+    				    'researching_time_productivity',
+    				    'researching_material_productivity',
+    				    'copying',
+    				    'reverse_engineering',
+    				    'jump_clone_activation_fee',
+    				    'reprocessing_tax',
+    				    'industry_job_tax' 
 				);
 				$filtered_data = null;
-				foreach ( $xml_array as $entry ) {
-					if (in_array ( $entry ['refTypeID'], $valid_refTypeID )) {
-						$filtered_data [] = $entry;
+				foreach ( $journal_records as $key=>$entry ) {
+					if (in_array ( $entry ['ref_type'], $valid_refTypeID )) {
+					    /*
+					     * also cehck for negative values and only add if its positive.
+					     */
+					    if($entry['amount']>0){
+					        
+					        $mysql_date = str_replace('T', ' ', $entry['date']);
+					        $mysql_date = str_replace('Z', '', $mysql_date);
+					        $journal_records[$key]['date']=$mysql_date;
+					        
+					        
+					        
+					        $filtered_data [] =  $journal_records[$key];
+					    }	
 					}
 				}
 				
 				// sort the array by date ascending starting from oldest first.
-				usort ( $filtered_data, array (
-						$this,
-						"date_compare" 
-				) );
+// 				usort ( $filtered_data, array (
+// 						$this,
+// 						"date_compare" 
+// 				) );
+
 			}
 			
 			return $filtered_data;
 		}
+	}
+	/** Inserts new characters in to the database.
+	 * @param array $bounties_array response from SSO api endpoint
+	 *
+	 * @return void
+	 */
+	public function insert_new_characters_in_database($bounties_array){
+	    Global $wpdb;
+	    $sso = new Top_Ratter_SSO ();
+	    $unique_char_id=array();
+	    foreach($bounties_array as $bounty){
+	        if (in_array ( $bounty ['second_party_id'], $unique_char_id )) {
+	        }else{
+	            //add to array
+	            $unique_char_id[]=$bounty ['second_party_id'];
+	        }
+	    }
+	    
+	    //select all characters from database
+	    $sql = "SELECT `owner_id` FROM `" . $wpdb->prefix . "tr_characters`";
+	    $existing_chars = $wpdb->get_results("$sql",ARRAY_A);
+	    if($existing_chars){
+	        //filter out those that is not in database
+	        foreach($existing_chars as $char){
+	            if (in_array ( $char['owner_id'], $unique_char_id )) {
+	                if (($key = array_search($char['owner_id'], $unique_char_id)) !== false) {
+	                    unset($unique_char_id[$key]);
+	                }
+	            }
+	        }
+	        
+	        if($unique_char_id){
+	            $new_character_data=$sso->owner_ids_to_names($unique_char_id);
+	        }
+	    }else{
+	        if($unique_char_id)
+	            $new_character_data=$sso->owner_ids_to_names($unique_char_id);
+	    }
+	    
+	    if($new_character_data){
+	        // insert in the database
+	        $sql="INSERT INTO `" . $wpdb->prefix . "tr_characters`(`owner_id`, `ownerName2`) VALUES";
+	        $count=count($new_character_data);
+	        $i=1;
+	        foreach($new_character_data as $record){
+	            $sql.='("'.$record['character_id'].'","'.$record['character_name'].'")';
+	            
+	            if($i==$count){
+	                $sql.='';
+	            }else{
+	                $sql.=',';
+	            }
+	            $i++;
+	        }
+	        $sql.=';';
+	        
+	        $wpdb->query($sql);
+	    }
 	}
 	/**
 	 * USORT custom helper function
@@ -444,11 +489,11 @@ class Top_Ratter {
 	public function gather_data_by_date($start, $end) {
 		global $wpdb;
 		
-		// get the user id
-		$user_id = get_current_user_id ();
-		$user_meta = get_user_meta ( $user_id, 'Char_corp_asign', true );
-		// pull only this users corporation data
-		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_characters` WHERE corp_id='$user_meta';";
+		
+		
+
+		// pull all characters
+		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_characters`";
 		
 		$characters = $wpdb->get_results ( "$sql", ARRAY_A );
 		
@@ -549,27 +594,6 @@ class Top_Ratter {
 	public function prefix_admin_tr_action() {
 		global $wpdb;
 		
-
-		// check for post values as array
-		if (isset ( $_POST ['assign_user_to_corp'] )) {
-			$arr = $_POST ['assign_user_to_corp'];
-			foreach ( $arr as $k ) {
-
-				$vars = explode ( "_", $k );
-				$user_meta = get_user_meta ( $vars [0], 'Char_corp_asign', true );
-				// update array.
-				if ($user_meta != null) {
-					update_user_meta ( $vars [0], 'Char_corp_asign', $vars [1], $user_meta );
-				} else {
-					add_user_meta ( $vars [0], 'Char_corp_asign', $vars [1], true );
-				}
-				if ($vars [1] == 'N') {
-					// remove the value
-					delete_user_meta ( $vars [0], 'Char_corp_asign' );
-				}
-			}
-		}
-		
 		// This is when user sets main char submit handle
 		if (isset ( $_POST ['user_select_main_char'] )) {
 			// update all chars as main char=0
@@ -592,112 +616,7 @@ class Top_Ratter {
 			);
 			$wpdb->update ( $wpdb->prefix . 'tr_users_chars', $data, $where );
 		}
-		
-		// ASSIGN CHARS TO USER SUBMTI
-		if (isset ( $_POST ['aacfu_aauc_user_id'] )) {
-			$this->assign_chars_to_user ( $_POST ['aacfu_aauc_user_id'], $_POST ['aacfu_aauc'] );
-		}
-		
-		// REMOVE chars from user.
-		if (isset ( $_POST ['aacfu_aruc_user_id'] )) {
-			$this->detach_chars_from_user ( $_POST ['aacfu_aruc_user_id'], $_POST ['aacfu_aruc'] );
-		}
-		
-		/* -----ADD NEW CORPORATION----- */
-		if (isset ( $_POST ['new_corp_insert_attempt'] )) {
-			// atempt to add new corporation has been made
-			$errors = null;
-			if ($_POST ['new_key_id'] == '') {
-				$errors ['new_key_id'] = 'Key ID missing.';
-			}
-			set_transient ( 'new_key_id_v', $_POST ['new_key_id'], 60 * 2 );
-			
-			if ($_POST ['new_vcode'] == '') {
-				$errors ['new_vcode'] = 'vcode missing.';
-			}
-			set_transient ( 'new_vcode_v', $_POST ['new_vcode'], 60 * 2 );
-			
-			if ($_POST ['new_corp_name'] == '') {
-				$errors ['new_corp_name'] = 'corporation name missing.';
-			}
-			set_transient ( 'new_corp_name_v', $_POST ['new_corp_name'], 60 * 2 );
-			
-			if ($_POST ['new_corp_id'] == '') {
-				$errors ['new_corp_id'] = 'corporation ID (as in zkillboard) missing.';
-			}
-			set_transient ( 'new_corp_id_v', $_POST ['new_corp_id'], 60 * 2 );
-			
-			if ($_POST ['new_corp_return_percent'] == '') {
-				$errors ['new_corp_return_percent'] = 'new_corp_return_percent missing';
-			}
-			set_transient ( 'new_corp_return_percent_v', $_POST ['new_corp_return_percent'], 60 * 2 );
-			
-			if ($_POST ['new_corp_top_ratter_count'] == '') {
-				$errors ['new_corp_top_ratter_count'] = 'new_corp_top_ratter_count missing';
-			}
-			set_transient ( 'new_corp_top_ratter_count_v', $_POST ['new_corp_top_ratter_count'], 60 * 2 );
-			
-			// if errrors not null the exit
-			if ($errors) {
-				// make array of transients showing whats missing.
-				foreach ( $errors as $error_name => $value ) {
-					set_transient ( $error_name, $value, 60 * 60 );
-				}
-			} else {
-				// everything is OK so insert in the db
-				$data = array (
-						'key_id' => $_POST ['new_key_id'],
-						'vCode' => $_POST ['new_vcode'],
-						'corp_name' => $_POST ['new_corp_name'],
-						'corporation_id' => $_POST ['new_corp_id'],
-						'corp_return_percent' => $_POST ['new_corp_return_percent'],
-						'corp_top_ratter_count' => $_POST ['new_corp_top_ratter_count'],
-						'show_top5_pvp'=>1
-				);
-				
-				$wpdb->insert ( $wpdb->prefix . 'tr_corporations', $data );
-			}
-		}
-		
-		/* -----DELETE CORPORATION----- */
-		if (isset ( $_POST ['delete_table_corp_id'] )) {
-			$wpdb->delete ( $wpdb->prefix . 'tr_corporations', array (
-					'id' => $_POST ['delete_table_corp_id'] 
-			) );
-		}
-		
-		/* -----EDIT CORPORATION----- */
-		if (isset ( $_POST ['edit_table_corp_id'] )) {
-			// attempting to edit the corporation
-			
-			if ($_POST ['edit_key_id'] == '' || $_POST ['edit_vCode'] == '' || $_POST ['edit_corp_name'] == '' || $_POST ['edit_corporation_id'] == ''|| $_POST ['edit_corp_return_percent'] == ''|| $_POST ['edit_corp_top_ratter_count'] == '') {
-				set_transient ( 'edit_corp_can_not_empty', 'Editing Fields Can Not Be Left Empty, Please Fill All Fields And Try Again.', 60 * 60 );
-			} else {
-				
-				//get the checkbox value.
-				if ($_POST['edit_show_top5_pvp'] == '1'){
-					// show the top  pvp
-					$show_top_pvp=1;
-				}else{
-					$show_top_pvp=0;
-				}
-				
-				// update the fields
-				$where = array (
-						'id' => $_POST ['edit_table_corp_id'] 
-				);
-				$data = array (
-						'key_id' => $_POST ['edit_key_id'],
-						'vCode' => $_POST ['edit_vCode'],
-						'corp_name' => $_POST ['edit_corp_name'],
-						'corporation_id' => $_POST ['edit_corporation_id'],
-						'corp_return_percent'=>$_POST ['edit_corp_return_percent'],
-						'corp_top_ratter_count'=>$_POST ['edit_corp_top_ratter_count'],
-						'show_top5_pvp'=>$show_top_pvp
-				);
-				$wpdb->update ( $wpdb->prefix . 'tr_corporations', $data, $where );
-			}
-		}
+
 		
 		wp_redirect ( $_SERVER ['HTTP_REFERER'] );
 		exit ();
@@ -716,11 +635,8 @@ class Top_Ratter {
 	public function prepare_data_for_chart_by_days($start, $end) {
 		global $wpdb;
 		
-		// get the user id
-		$user_id = get_current_user_id ();
-		$user_corp_id = get_user_meta ( $user_id, 'Char_corp_asign', true );
-		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_characters` WHERE corp_id='$user_corp_id';";
-		
+
+		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_characters`";
 		$characters = $wpdb->get_results ( "$sql", ARRAY_A );
 		
 		if ($characters != null) {
@@ -730,10 +646,15 @@ class Top_Ratter {
 			foreach ( $characters as $char ) {
 				// run trough each char and create this array of date->amount for selected time period FOR EACH DAY WITHIN
 				$character_data = $this->prepare_character_data_by_days_for_chart ( $start, $end, $char ['owner_id'] );
+				
+				
+				
 				if ($character_data != null) {
+				    //BY CHAR ID NOT NAME
 					$chars_by_days [$char ['ownerName2']] = $character_data;
 				}
 			}
+			
 			
 			/*
 			 * data should be sorted by main chars here.
@@ -864,10 +785,7 @@ class Top_Ratter {
 		// sort and order the array here.
 		global $wpdb;
 		
-		// get the user id
-		$user_id = get_current_user_id ();
-		$user_corp_id = get_user_meta ( $user_id, 'Char_corp_asign', true );
-		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_characters` WHERE corp_id='$user_corp_id';";
+		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_characters`;";
 		
 		$characters = $wpdb->get_results ( "$sql", ARRAY_A );
 		
@@ -1053,14 +971,11 @@ class Top_Ratter {
 		global $wpdb;
 		$unsorted_data = $data_array;
 		
-		// acquire corporation id for the user that is doing the querry
-		$user_id = get_current_user_id ();
-		$user_meta_corp_id = get_user_meta ( $user_id, 'Char_corp_asign', true );
-		
+
 		// get main chars
 		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_users_chars`
 				JOIN " . $wpdb->prefix . "tr_characters charz ON " . $wpdb->prefix . "tr_users_chars.char_id=charz.id
-				WHERE`is_main_char` ='1' AND charz.corp_id='$user_meta_corp_id'";
+				WHERE`is_main_char` ='1'";
 		$main_chars = $wpdb->get_results ( $sql, ARRAY_A );
 		
 		/*
@@ -1075,7 +990,7 @@ class Top_Ratter {
 					// acquire main char users chars for this corp.
 					$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_users_chars` 
 							JOIN " . $wpdb->prefix . "tr_characters charz ON " . $wpdb->prefix . "tr_users_chars.char_id=charz.id 
-							WHERE charz.corp_id='$user_meta_corp_id' AND `user_id`='" . $main_char ['user_id'] . "'
+							WHERE `user_id`='" . $main_char ['user_id'] . "'
 					";
 					$related_chars = $wpdb->get_results ( $sql, ARRAY_A );
 					
@@ -1152,10 +1067,7 @@ class Top_Ratter {
 		global $wpdb;
 		
 		// get all kills
-		$user_id = get_current_user_id ();
-		$user_meta_corp_id = get_user_meta ( $user_id, 'Char_corp_asign', true );
-		
-		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_corporations` WHERE `id`='$user_meta_corp_id'";
+		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_sso_credentials`";
 		
 		$corp_data = $wpdb->get_row ( $sql, ARRAY_A );
 		
@@ -1183,10 +1095,10 @@ class Top_Ratter {
 					"isk_compare" 
 			) );
 			
-			$limit = 4;
+			$limit = 5;
 			$top_five = null;
 			foreach ( $sorted_kills_by_main as $character ) {
-				if ($limit < 0) {
+				if ($limit <1) {
 					break;
 				}
 				$top_five [] = $character;
@@ -1405,13 +1317,13 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		
 		
 		// acquire corporation id for the user that is doing the querry
-		$user_id = get_current_user_id ();
-		$user_meta_corp_id = get_user_meta ( $user_id, 'Char_corp_asign', true );
+// 		$user_id = get_current_user_id ();
+// 		$user_meta_corp_id = get_user_meta ( $user_id, 'Char_corp_asign', true );
 		
 		// get main chars
 		$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_users_chars`
 				JOIN " . $wpdb->prefix . "tr_characters charz ON " . $wpdb->prefix . "tr_users_chars.char_id=charz.id
-						WHERE`is_main_char` ='1' AND charz.corp_id='$user_meta_corp_id'";
+						WHERE `is_main_char` ='1'";
 		$main_chars = $wpdb->get_results ( $sql, ARRAY_A );
 		
 		if ($data) {
@@ -1422,7 +1334,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 					// acquire main char users chars for this corp.
 					$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_users_chars`
 							JOIN " . $wpdb->prefix . "tr_characters charz ON " . $wpdb->prefix . "tr_users_chars.char_id=charz.id
-									WHERE charz.corp_id='$user_meta_corp_id' AND `user_id`='" . $main_char ['user_id'] . "'
+									WHERE `user_id`='" . $main_char ['user_id'] . "'
 					";
 					$related_chars = $wpdb->get_results ( $sql, ARRAY_A );
 					
@@ -1515,7 +1427,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		$url = "https://zkillboard.com/api/kills/corporationID/$corp_id/year/$year/month/$month/page/$page/orderDirection/asc/";
 		
 		//for debuging purpouses and to see if it is even working because they change stuff often.
-		echo $url . '<br><br>';
+// 		echo $url . '<br><br>';
 		$ch = curl_init ( $url );
 		curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, 1 );
 		curl_setopt ( $ch, CURLOPT_HEADER, 0 );
@@ -1566,7 +1478,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 			if ($month_now == $month) {
 				
 				// this is the same month so find out the page from the db to start checking from
-				$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_corporations` WHERE `corporation_id`='$corp_id'";
+				$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_sso_credentials` WHERE `corporation_id`='$corp_id'";
 				$api_page = $wpdb->get_row ( $sql, ARRAY_A );
 				
 				// if not record set 0
@@ -1576,7 +1488,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 					$page = '0';
 				}
 
-				echo"<pre>Record Found: same month. Page Nr:$page</pre>";
+// 				echo"<pre>Record Found: same month. Page Nr:$page</pre>";
 
 			} else {
 				
@@ -1592,7 +1504,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 				/*
 				 * pull last months data
 				 */
-				echo"<pre>Record Found: different month. Pulling  -25 days</pre>";
+// 				echo"<pre>Record Found: different month. Pulling  -25 days</pre>";
 				$zkill_api_old=$this->get_zkill_api_data_all_pages($corp_id,$year_p,$month_p,$page_p);
 				
 				// process the gathered information
@@ -1602,14 +1514,14 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 				/*
 				 * continue with current months api apull.
 				 */
-				echo"<pre>Record Found: different month. Pulling current month</pre>";
+// 				echo"<pre>Record Found: different month. Pulling current month</pre>";
 				$year = date ( 'Y', strtotime ( $laiks_tagad ) );
 				$month = date ( 'm', strtotime ( $laiks_tagad ) );
 				$page = '0';
 			}
 		} else {
 			
-			echo"<pre>No records found getting fresh data.</pre>";
+// 			echo"<pre>No records found getting fresh data.</pre>";
 			// means no records at all get this months from 0 for this month
 			$year = date ( 'Y', strtotime ( $laiks_tagad ) );
 			$month = date ( 'm', strtotime ( $laiks_tagad ) );
@@ -1647,9 +1559,9 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		$last_valid_page = $page;
 		$stop = false;
 		
-		echo"<pre>";
-		echo "EXECUTING API CALL! year:$year, month:$month,page:$page. ";
-		echo"</pre>";
+// 		echo"<pre>";
+// 		echo "EXECUTING API CALL! year:$year, month:$month,page:$page. ";
+// 		echo"</pre>";
 		
 		do {
 		
@@ -1660,12 +1572,12 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 			$kill_data = $this->call_Zkill_api_curl ( $corp_id, $year, $month, $page );
 		
 			if ($kill_data != false) {
-				echo"<pre> Got something from zkill api at page: $page </pre>";
+// 				echo"<pre> Got something from zkill api at page: $page </pre>";
 		
 				$zkill_api [] = $kill_data;
 				$last_valid_page ++;
 			} else {
-				echo"<pre>Zkill api returns NULL at page: $page </pre>";
+// 				echo"<pre>Zkill api returns NULL at page: $page </pre>";
 				$stop = true;
 			}
 				
@@ -1681,9 +1593,9 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 				'corporation_id' => $corp_id
 		);
 		
-		echo"<pre>Inserting last valid page number in DB :$last_valid_page. </pre>";
+// 		echo"<pre>Inserting last valid page number in DB :$last_valid_page. </pre>";
 
-		$wpdb->update ( $wpdb->prefix . 'tr_corporations', $data, $where );
+		$wpdb->update ( $wpdb->prefix . 'tr_sso_credentials', $data, $where );
 		
 		
 		return $zkill_api;

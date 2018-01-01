@@ -1,14 +1,14 @@
 <?php
 /**
  * @package tr_top_ratter
- * @version 0.6.4
+ *
  */
 /*
  * Plugin Name: tr_top_ratter
  * Description: EVE online related plugin. This plugin gathers information about how much isk (in corp tax) corporation members have gathered from ratting within specific time period. 
  * Author: Ugis Varslavans
  * Author URI:        https://evewho.com/pilot/Judge07
- * Version: 0.6.21
+ * Version: 0.7.0
  * License: GPL-2.0 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  */
