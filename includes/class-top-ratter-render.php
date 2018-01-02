@@ -431,7 +431,7 @@ class Top_Ratter_Render {
 			
 			// define the tax and count of top ratters
 			$raturn_tax=$corp_data['corp_return_percent'];
-			$top_ratters_count=$corp_data['corp_top_ratter_count'];
+			$top_ratters_count=$corp_data['corp_top_ratter_count']+1;
 			
 			echo '<table class="tr_selection">
 				<thead>
@@ -445,7 +445,7 @@ class Top_Ratter_Render {
 				<tbody>';
 			$total_return=null;
 			$total_tax=null;
-			$i=0;
+			$i=1;
 			foreach ( $chars as $char ) {
 				$tenth=null;
 				if($i==$top_ratters_count){
@@ -503,7 +503,7 @@ class Top_Ratter_Render {
 			/*
 			 * only show this for officers
 			 * 
-			 * @todo Check if this character is officer (has director role) and show it as well
+			 * @todo Check if this character is officer (has director role in API) and show it as well
 			 *       for now all directors are admins as per old version.
 			 * 
 			 */
@@ -639,24 +639,15 @@ class Top_Ratter_Render {
 		if (current_user_can ( 'manage_options' )) {
 			global $wpdb;
 			
-			echo'<p>This is where you can spai and be creepy and all that stuff all the info on the users characters will be displayed here.</p>';
+			echo'<p>This is where you can spai and be creepy and all that stuff, all the info on the users characters will be displayed here.</p>';
 
+			/*
+			 * display users and their characters in select element
+			 * users -> characters -> get_info
+			 */
 			
 			
-			
-			$sql = "SELECT ID,user_nicename FROM `" . $wpdb->prefix . "users` ";
-			$all_users = $wpdb->get_results ( "$sql", ARRAY_A );
-			
-			echo '<form action="' . get_admin_url () . 'admin-post.php" method="post">';
-			echo '<input type="hidden" name="action" value="tr_action" />';
-			echo '<div class="users_corps">';
-			
-			foreach ( $all_users as $user ) {
-				echo '<p>' . $user ['ID'] . '-' . $user ['user_nicename'] . ' -> ' . $this->render_user_assignment ( $user ['ID'] ) . '</p>';
-			}
-			echo'</div>';
-			echo '<input type="submit" value="save" />';
-			echo '</form>';
+
 		}
 	}
 	/**DEPRECIATED
@@ -1132,8 +1123,6 @@ EOD;
 	public function structures_incomes(){
 		
 // 		echo'<pre> Structures incomes --- coming soon ™</pre>';
-		
-		
 // 		return;
 		
 		if(is_user_logged_in()==true) {

@@ -3,7 +3,8 @@ transient name for errors for user SSO_TOKEN_REFRESH_ERROR_eve
 ## make new table and selecting the systems functionality and gathering algorithm -> fq0hfq0wfhq0w8fhq0wfh
 #pluggin settings edit table make it vertical + select systems to show npc kills in ->  35eye5urrey5yet4y54etwe
 
-#
+# start the ratting table with 1 not 0
+# zkilboard api headers to be dynnamic.
 
 ### load the javascript only where needed.
 
@@ -12,8 +13,6 @@ transient name for errors for user SSO_TOKEN_REFRESH_ERROR_eve
 # RAtting data for specific system by specific character in specific time period by number off npc kills NOT isk.
 # select system from available systems out of the ratting data
 # then show all records for this system in time period as totals by chars. 30003679 HHK
-
-### SSO bacground check functionality
 
 
                     echo"curl response raw<pre>";

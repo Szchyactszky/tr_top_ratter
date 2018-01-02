@@ -1436,7 +1436,27 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		curl_setopt ( $ch, CURLOPT_SSL_VERIFYPEER, 0 );
 		// ssl disable ends0
 		
-		curl_setopt($ch,CURLOPT_USERAGENT,'http://reallifeoutpost.com/ Maintainer: Judge07 pikkie747@gmail.com');
+		/*
+		 * TODO
+		 *  use the actual webpage url.
+		 *  use the first admin existing character name for maintainer.
+		 *  use the admin login email.
+		 */
+		
+		if(isset($_SERVER['HTTPS'])){
+		    $protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
+		}
+		else{
+		    $protocol = 'http';
+		}
+		$site_url=$protocol . "://" . $_SERVER['HTTP_HOST'];
+		
+		
+		$top_rat=new Top_Ratter();
+		
+		$ar=$top_rat->get_main_admin_character_in_corporation();
+		
+		curl_setopt($ch,CURLOPT_USERAGENT,''.$site_url.' Maintainer: '.$ar['name'].' '.$ar['email'].'');
 		
 		$response = curl_exec ( $ch );
 		
@@ -1447,6 +1467,56 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		$data = json_decode ( $response, TRUE );
 		return $data;
 	}
+	/**
+	 * Returns array of the first administrator main character name that is still in the corporation and user email associated to it.
+	 * @return $Maintainer_name
+	 */
+	public function get_main_admin_character_in_corporation(){
+	    global $wpdb;
+	    //Get all users in the DB
+	    $wp_user_search = $wpdb->get_results("SELECT ID, display_name FROM $wpdb->users ORDER BY ID");
+	    $SSO=new Top_Ratter_SSO();
+
+	    
+	    $sql="SELECT * FROM `".$wpdb->prefix."tr_sso_credentials`";
+	    $credentials=$wpdb->get_row($sql,ARRAY_A);
+	    
+	    
+	    $return_array=array();
+	    
+	    //Loop through all users
+	    foreach ( $wp_user_search as $userid ) {
+	        //Current user ID we are looping through
+	        $curID = $userid->ID;
+	        //Grab the user info of current ID
+	        $curuser = get_userdata($curID);
+	        //Current user level
+	        $user_level = $curuser->user_level;
+	        //Only look for admins
+	        if($user_level >= 8){//levels 8, 9 and 10 are admin
+	            
+	            //check if user has main chars related in user_chars table. 
+	            $sql="SELECT * FROM `".$wpdb->prefix."tr_users_chars`
+                      JOIN " . $wpdb->prefix . "tr_characters ON " . $wpdb->prefix . "tr_users_chars.char_id=" . $wpdb->prefix . "tr_characters.id
+                      WHERE `user_id`='$curID' AND `is_main_char`='1'";
+	            
+	            $main_char=$wpdb->get_row($sql,ARRAY_A);
+	           
+	            if($main_char){
+	                 $corp=$SSO->char_id_to_corp_id($main_char['owner_id']);
+   
+    	            if($corp['corporation_id']==$credentials['corporation_id']){
+    	                
+    	                $return_array['name']=$main_char['ownerName2'];
+    	                $return_array['email']=$curuser->user_email;
+    	                break;
+    	            }
+	            } 
+	        }
+	    }
+	    return$return_array;   
+	}
+	
 	/**
 	 * Calls zkillboard api untill desired data is acquired, and inserts all new data in the table.
 	 *
@@ -1559,9 +1629,6 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 		$last_valid_page = $page;
 		$stop = false;
 		
-// 		echo"<pre>";
-// 		echo "EXECUTING API CALL! year:$year, month:$month,page:$page. ";
-// 		echo"</pre>";
 		
 		do {
 		
@@ -1645,7 +1712,7 @@ WHERE " . $wpdb->prefix . "tr_users_chars.char_id IS NULL AND " . $wpdb->prefix 
 			 * INSERT IGNORE INTO wp_tr_pvp_chars_kills (`character`,`corp_id`,`kill_id`,`timestamp`)
 			 * VALUES ('Szchyactszky','98342863','61740744','2017-04-22 09:16:43'),('Szchyactszky','98342863','61740746','2017-04-22 09:16:59')
 			 *
-			 * so prepare the sql for each char and put them all togehter to be executed at once at the end. put ; at the end of each char sql. for speed ofc
+			 * so prepare the sql for each char and put them all togehter to be executed at once at the end. put ; at the end of each char sql. for speed ofc and glory of Bob
 			 */
 			
 			$complete_sql = null;
