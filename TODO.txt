@@ -1,10 +1,13 @@
 transient name for errors for user SSO_TOKEN_REFRESH_ERROR_eve
 
+#probationary characters.
+# follow trough the API process and token removal with removal from corp/ not being in corp. etc
+# on login check for corp and removal of token.
+
+
 ## make new table and selecting the systems functionality and gathering algorithm -> fq0hfq0wfhq0w8fhq0wfh
 #pluggin settings edit table make it vertical + select systems to show npc kills in ->  35eye5urrey5yet4y54etwe
 
-# start the ratting table with 1 not 0
-# zkilboard api headers to be dynnamic.
 
 ### load the javascript only where needed.
 

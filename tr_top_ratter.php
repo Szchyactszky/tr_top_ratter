@@ -8,7 +8,7 @@
  * Description: EVE online related plugin. This plugin gathers information about how much isk (in corp tax) corporation members have gathered from ratting within specific time period. 
  * Author: Ugis Varslavans
  * Author URI:        https://evewho.com/pilot/Judge07
- * Version: 0.7.0
+ * Version: 0.7.1
  * License: GPL-2.0 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  */
@@ -36,8 +36,8 @@ function run_top_ratter() {
 run_top_ratter ();
 
 // log errors on plugin activation.
-register_activation_hook ( __FILE__, 'my_activation_func' );
-function my_activation_func() {
-	file_put_contents ( __DIR__ . '/my_loggg.txt', ob_get_contents () );
-}
+// register_activation_hook ( __FILE__, 'my_activation_func' );
+// function my_activation_func() {
+// 	file_put_contents ( __DIR__ . '/my_loggg.txt', ob_get_contents () );
+// }
 ?>

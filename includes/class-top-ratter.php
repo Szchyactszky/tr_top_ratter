@@ -19,7 +19,6 @@ class Top_Ratter {
 	public function run() {
 		// include other classes
 		require_once plugin_dir_path ( __FILE__ ) . 'class-top-ratter-render.php';
-		require_once plugin_dir_path ( __FILE__ ) . 'class-top-ratter-xml-api.php';
 		require_once plugin_dir_path ( __FILE__ ) . 'class-top-ratter-sso.php';
 		
 		// enque styles for this plugin
@@ -108,7 +107,7 @@ class Top_Ratter {
 	    foreach ( $required_tables as $table ) {
 	        $val = $wpdb->get_var ( "SHOW TABLES LIKE '$table'" );
 	        if ($val == $table) {
-	            // exists
+	            // exists//
 	        } else {
 	            // create non existing
 	            $this->create_table ( $table );
@@ -150,6 +149,7 @@ class Top_Ratter {
 	        case "$wpdb->prefix" . "tr_characters" :
 	            $sql = "CREATE TABLE `" . $wpdb->prefix . "tr_characters`(
 						  `id` INT(200) NOT NULL AUTO_INCREMENT,
+                          `corp_id` INT(10) NOT NULL,
 						  `owner_id` INT(100) NOT NULL,
 						  `ownerName2` VARCHAR(200) NOT NULL,
 						  PRIMARY KEY(`id`),

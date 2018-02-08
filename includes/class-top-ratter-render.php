@@ -345,11 +345,26 @@ class Top_Ratter_Render {
 			}
 			
 
+			/*
+			 * check if the linked characters of the user is in the same corporation 
+			 * as stated in the tr_sso_credentials and only then proceed with page rendering.
+			 * 
+			 * F_ID:checkusercorprender23y4uity
+			 */
 
-			$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_users_chars` WHERE user_id='$current_user->ID';";
-			$linked_characters = $wpdb->get_row ( "$sql", ARRAY_A );
+			//get corporation id to match any char against it.
+			$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_sso_credentials`;";
+			$corp_credentials_r= $wpdb->get_row ( "$sql", ARRAY_A );
+			$corp_id=$corp_credentials_r['corporation_id'];
 			
-			if($linked_characters){
+			
+			$sql = "SELECT * FROM `" . $wpdb->prefix . "tr_characters`
+                JOIN " . $wpdb->prefix . "tr_users_chars ON " . $wpdb->prefix . "tr_characters.id=" . $wpdb->prefix . "tr_users_chars.char_id
+                WHERE user_id='$current_user->ID' AND corp_id='$corp_id';";
+			$users_chars = $wpdb->get_results("$sql", ARRAY_A);
+			
+			
+			if($users_chars){
 			    
 			    //try to refresh the ESI API data without cron job
 			    $this->cronjob_triger_shortcode_function();
@@ -638,18 +653,108 @@ class Top_Ratter_Render {
 		// show only for admins
 		if (current_user_can ( 'manage_options' )) {
 			global $wpdb;
-			
-			echo'<p>This is where you can spai and be creepy and all that stuff, all the info on the users characters will be displayed here.</p>';
 
-			/*
-			 * display users and their characters in select element
-			 * users -> characters -> get_info
-			 */
+			if (isset ( $_GET ['microscoped_user'] )) {
+			    if (isset ( $_GET ['owner_id'] )) {
+			        // data for the character.
+			        $this->outputCharacterMainData($_GET ['owner_id']);
+			        
+			    }else{
+			        //show char selection screen
+			        $this->outputCharacterSelectionElementUser($_GET ['microscoped_user']);
+			    }
+			    
+			}else{
+			    //output the default starter selection  element
+			    $this->outputUserSelectElement();
+			}
 			
 			
-
+// 			echo"<pre>";
+// 			echo var_dump($users_with_chars);
+// 			echo"</pre>";
+			
+	
 		}
 	}
+
+	/**
+	 * Outputs the user selection
+	 *
+	 * @return html string of data to render
+	 */
+	public function outputUserSelectElement(){
+	    global $wpdb;
+	    //if no get values are supplied then show this selection select element.
+	    $sql = "SELECT *,COUNT(char_id) as numChars FROM `" . $wpdb->prefix . "users`
+                JOIN " . $wpdb->prefix . "tr_users_chars ON " . $wpdb->prefix . "users.ID=" . $wpdb->prefix . "tr_users_chars.user_id
+			    JOIN " . $wpdb->prefix . "tr_sso_tokens ON " . $wpdb->prefix . "tr_users_chars.char_id=" . $wpdb->prefix . "tr_sso_tokens.character_id
+                JOIN " . $wpdb->prefix . "tr_characters ON " . $wpdb->prefix . "tr_users_chars.char_id=" . $wpdb->prefix . "tr_characters.id
+                GROUP BY user_id";
+	    $users_with_chars = $wpdb->get_results("$sql", ARRAY_A);
+	    
+	    //loop trough users and make select element.
+	    if($users_with_chars){
+	        echo'<form method=GET>';
+	        echo'<select name="microscoped_user">';
+	        foreach($users_with_chars as $userData){
+	            //check if this user has any characters that are not in the corporation, if so add SPAI tag.
+	            $sql = "SELECT * FROM `" . $wpdb->prefix . "tr_users_chars`
+                            JOIN " . $wpdb->prefix . "tr_characters ON " . $wpdb->prefix . "tr_users_chars.char_id=" . $wpdb->prefix . "tr_characters.id
+                            WHERE (SELECT corporation_id from " . $wpdb->prefix . "tr_sso_credentials)!=" . $wpdb->prefix . "tr_characters.corp_id
+                            AND user_id = ".$userData['ID'].";";
+	            $isSpai = $wpdb->get_results("$sql", ARRAY_A);
+	            $spaiTag='';
+	            if($isSpai){
+	                $spaiTag="[SPAI]";
+	            }
+	            echo'<option value="'.$userData['ID'].'">'.$spaiTag.' '.$userData['user_login'].' ['.$userData['numChars'].'] </option>';
+	        }
+	        echo'</select>';
+	        echo' <input type="submit" value="Look at this user!" />';
+	        echo'</form>';
+	    }
+	}
+	/**
+	 * Outputs the character selection for usr.
+	 *
+	 * @return html string of data to render
+	 */
+	public function outputCharacterSelectionElementUser($userID){
+	    
+	    global $wpdb;
+	    //if no get values are supplied then show this selection select element.
+	    $sql = "SELECT * FROM `" . $wpdb->prefix . "tr_users_chars`
+                JOIN " . $wpdb->prefix . "tr_characters ON " . $wpdb->prefix . "tr_users_chars.char_id=" . $wpdb->prefix . "tr_characters.id
+                WHERE user_id = ".$userID.";";
+
+	    $users_chars = $wpdb->get_results("$sql", ARRAY_A);
+
+	    //loop trough users and make select element.
+	    if($users_chars){
+	        echo'<form method=GET>';
+	        echo' <input type="hidden" name="microscoped_user" value="'.$userID.'" />';
+	        echo'<select name="owner_id">';
+	        foreach($users_chars as $chars){
+	            echo'<option value="'.$chars['owner_id'].'">'.$chars['ownerName2'].' </option>';
+	        }
+	        echo'</select>';
+	        echo' <input type="submit" value="Inspect Character!" />';
+	        echo'</form>';
+	    }   
+	}
+	/**
+	 * Outputs the data for selected chracter
+	 *
+	 * @return html string of data to render
+	 */
+	public function outputCharacterMainData($ownerID){
+	    echo 'Data for character ID:'.$ownerID .' coming soon.';
+	}
+	
+	
+	
+	
 	/**DEPRECIATED
 	 * Render the select element next to each users field.
 	 *
@@ -1354,7 +1459,14 @@ EOD;
 	 */
 	public function render_main_char_selection_by_user(){
 	
-		global $wpdb;
+	    //hook the login check function on login screen since the hoook is not working for some rason
+	    $sso=new Top_Ratter_SSO();
+	   $sso-> user_login_token_check();
+		
+	    
+	    
+	    
+	    global $wpdb;
 		
 		$user_id = get_current_user_id ();
 		
